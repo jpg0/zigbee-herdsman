@@ -1,16 +1,14 @@
-import {DatabaseEntry, KeyValue} from '../tstype';
-import Entity from './entity';
-import ZclTransactionSequenceNumber from '../helpers/zclTransactionSequenceNumber';
-import * as Zcl from '../../zcl';
-import Endpoint from './endpoint';
-import Device from './device';
-import assert from 'assert';
-import Debug from "debug";
+import assert from 'node:assert';
 
-const debug = {
-    info: Debug('zigbee-herdsman:controller:group'),
-    error: Debug('zigbee-herdsman:controller:group'),
-};
+import {logger} from '../../utils/logger';
+import * as Zcl from '../../zspec/zcl';
+import ZclTransactionSequenceNumber from '../helpers/zclTransactionSequenceNumber';
+import {DatabaseEntry, KeyValue} from '../tstype';
+import Device from './device';
+import Endpoint from './endpoint';
+import Entity from './entity';
+
+const NS = 'zh:controller:group';
 
 interface Options {
     manufacturerCode?: number;
@@ -20,17 +18,25 @@ interface Options {
     transactionSequenceNumber?: number;
 }
 
-class Group extends Entity {
+interface OptionsWithDefaults extends Options {
+    direction: Zcl.Direction;
+    reservedBits: number;
+}
+
+export class Group extends Entity {
     private databaseID: number;
     public readonly groupID: number;
     private readonly _members: Set<Endpoint>;
-    get members(): Endpoint[] {return Array.from(this._members).filter((e) => e.getDevice());}
+    get members(): Endpoint[] {
+        return Array.from(this._members).filter((e) => e.getDevice());
+    }
     // Can be used by applications to store data.
     public readonly meta: KeyValue;
 
     // This lookup contains all groups that are queried from the database, this is to ensure that always
     // the same instance is returned.
-    private static groups: {[groupID: number]: Group} = null;
+    private static readonly groups: Map<number /* groupID */, Group> = new Map();
+    private static loadedFromDatabase: boolean = false;
 
     private constructor(databaseID: number, groupID: number, members: Set<Endpoint>, meta: KeyValue) {
         super();
@@ -44,13 +50,26 @@ class Group extends Entity {
      * CRUD
      */
 
+    /**
+     * Reset runtime lookups.
+     */
+    public static resetCache(): void {
+        Group.groups.clear();
+        Group.loadedFromDatabase = false;
+    }
+
     private static fromDatabaseEntry(entry: DatabaseEntry): Group {
         const members = new Set<Endpoint>();
+
         for (const member of entry.members) {
             const device = Device.byIeeeAddr(member.deviceIeeeAddr);
+
             if (device) {
                 const endpoint = device.getEndpoint(member.endpointID);
-                members.add(endpoint);
+
+                if (endpoint) {
+                    members.add(endpoint);
+                }
             }
         }
 
@@ -58,46 +77,66 @@ class Group extends Entity {
     }
 
     private toDatabaseRecord(): DatabaseEntry {
-        const members = Array.from(this.members).map((member) => {
-            return {deviceIeeeAddr: member.getDevice().ieeeAddr, endpointID: member.ID};
-        });
+        const members: DatabaseEntry['members'] = [];
+
+        for (const member of this.members) {
+            members.push({deviceIeeeAddr: member.getDevice().ieeeAddr, endpointID: member.ID});
+        }
 
         return {id: this.databaseID, type: 'Group', groupID: this.groupID, members, meta: this.meta};
     }
 
     private static loadFromDatabaseIfNecessary(): void {
-        if (!Group.groups) {
-            Group.groups = {};
-            const entries = Entity.database.getEntries(['Group']);
-            for (const entry of entries) {
+        if (!Group.loadedFromDatabase) {
+            for (const entry of Entity.database!.getEntriesIterator(['Group'])) {
                 const group = Group.fromDatabaseEntry(entry);
-                Group.groups[group.groupID] = group;
+                Group.groups.set(group.groupID, group);
+            }
+
+            Group.loadedFromDatabase = true;
+        }
+    }
+
+    public static byGroupID(groupID: number): Group | undefined {
+        Group.loadFromDatabaseIfNecessary();
+        return Group.groups.get(groupID);
+    }
+
+    /**
+     * @deprecated use allIterator()
+     */
+    public static all(): Group[] {
+        Group.loadFromDatabaseIfNecessary();
+        return Array.from(Group.groups.values());
+    }
+
+    public static *allIterator(predicate?: (value: Group) => boolean): Generator<Group> {
+        Group.loadFromDatabaseIfNecessary();
+
+        for (const group of Group.groups.values()) {
+            if (!predicate || predicate(group)) {
+                yield group;
             }
         }
     }
 
-    public static byGroupID(groupID: number): Group {
-        Group.loadFromDatabaseIfNecessary();
-        return Group.groups[groupID];
-    }
-
-    public static all(): Group[] {
-        Group.loadFromDatabaseIfNecessary();
-        return Object.values(Group.groups);
-    }
-
     public static create(groupID: number): Group {
         assert(typeof groupID === 'number', 'GroupID must be a number');
+        // Don't allow groupID 0, from the spec:
+        // "Scene identifier 0x00, along with group identifier 0x0000, is reserved for the global scene used by the OnOff cluster"
+        assert(groupID >= 1, 'GroupID must be at least 1');
+
         Group.loadFromDatabaseIfNecessary();
-        if (Group.groups[groupID]) {
+
+        if (Group.groups.has(groupID)) {
             throw new Error(`Group with groupID '${groupID}' already exists`);
         }
 
-        const databaseID = Entity.database.newID();
+        const databaseID = Entity.database!.newID();
         const group = new Group(databaseID, groupID, new Set(), {});
-        Entity.database.insert(group.toDatabaseRecord());
+        Entity.database!.insert(group.toDatabaseRecord());
 
-        Group.groups[group.groupID] = group;
+        Group.groups.set(group.groupID, group);
         return group;
     }
 
@@ -112,15 +151,15 @@ class Group extends Entity {
     public removeFromDatabase(): void {
         Group.loadFromDatabaseIfNecessary();
 
-        if (Entity.database.has(this.databaseID)) {
-            Entity.database.remove(this.databaseID);
+        if (Entity.database!.has(this.databaseID)) {
+            Entity.database!.remove(this.databaseID);
         }
 
-        delete Group.groups[this.groupID];
+        Group.groups.delete(this.groupID);
     }
 
-    public save(writeDatabase=true): void {
-        Entity.database.update(this.toDatabaseRecord(), writeDatabase);
+    public save(writeDatabase = true): void {
+        Entity.database!.update(this.toDatabaseRecord(), writeDatabase);
     }
 
     public addMember(endpoint: Endpoint): void {
@@ -141,103 +180,127 @@ class Group extends Entity {
      * Zigbee functions
      */
 
-    public async write(
-        clusterKey: number | string, attributes: KeyValue, options?: Options
-    ): Promise<void> {
-        options = this.getOptionsWithDefaults(options, Zcl.Direction.CLIENT_TO_SERVER);
-        const cluster = Zcl.Utils.getCluster(clusterKey);
-        const payload: {attrId: number; dataType: number; attrData: number| string | boolean}[] = [];
+    public async write(clusterKey: number | string, attributes: KeyValue, options?: Options): Promise<void> {
+        const optionsWithDefaults = this.getOptionsWithDefaults(options, Zcl.Direction.CLIENT_TO_SERVER);
+        const cluster = Zcl.Utils.getCluster(clusterKey, undefined, {});
+        const payload: {attrId: number; dataType: number; attrData: number | string | boolean}[] = [];
+
         for (const [nameOrID, value] of Object.entries(attributes)) {
             if (cluster.hasAttribute(nameOrID)) {
                 const attribute = cluster.getAttribute(nameOrID);
                 payload.push({attrId: attribute.ID, attrData: value, dataType: attribute.type});
-            } else if (!isNaN(Number(nameOrID))){
+            } else if (!isNaN(Number(nameOrID))) {
                 payload.push({attrId: Number(nameOrID), attrData: value.value, dataType: value.type});
             } else {
                 throw new Error(`Unknown attribute '${nameOrID}', specify either an existing attribute or a number`);
             }
         }
 
-        const log = `Write ${this.groupID} ${cluster.name}(${JSON.stringify(attributes)}, ${JSON.stringify(options)})`;
-        debug.info(log);
+        const createLogMessage = (): string =>
+            `Write ${this.groupID} ${cluster.name}(${JSON.stringify(attributes)}, ${JSON.stringify(optionsWithDefaults)})`;
+        logger.debug(createLogMessage, NS);
 
         try {
-            const frame = Zcl.ZclFrame.create(
-                Zcl.FrameType.GLOBAL, options.direction, true,
-                options.manufacturerCode, options.transactionSequenceNumber ?? ZclTransactionSequenceNumber.next(),
-                'write', cluster.ID, payload, options.reservedBits
+            const frame = Zcl.Frame.create(
+                Zcl.FrameType.GLOBAL,
+                optionsWithDefaults.direction,
+                true,
+                optionsWithDefaults.manufacturerCode,
+                optionsWithDefaults.transactionSequenceNumber ?? ZclTransactionSequenceNumber.next(),
+                'write',
+                cluster.ID,
+                payload,
+                {},
+                optionsWithDefaults.reservedBits,
             );
-            await Entity.adapter.sendZclFrameToGroup(this.groupID, frame, options.srcEndpoint);
+
+            await Entity.adapter!.sendZclFrameToGroup(this.groupID, frame, optionsWithDefaults.srcEndpoint);
         } catch (error) {
-            error.message = `${log} failed (${error.message})`;
-            debug.error(error.message);
+            const err = error as Error;
+            err.message = `${createLogMessage()} failed (${err.message})`;
+            logger.debug(err.stack!, NS);
+
             throw error;
         }
     }
 
-    public async read(
-        clusterKey: number | string, attributes: string[] | number [], options?: Options
-    ): Promise<void> {
-        options = this.getOptionsWithDefaults(options, Zcl.Direction.CLIENT_TO_SERVER);
-        const cluster = Zcl.Utils.getCluster(clusterKey);
+    public async read(clusterKey: number | string, attributes: (string | number)[], options?: Options): Promise<void> {
+        const optionsWithDefaults = this.getOptionsWithDefaults(options, Zcl.Direction.CLIENT_TO_SERVER);
+        const cluster = Zcl.Utils.getCluster(clusterKey, undefined, {});
         const payload: {attrId: number}[] = [];
+
         for (const attribute of attributes) {
             payload.push({attrId: typeof attribute === 'number' ? attribute : cluster.getAttribute(attribute).ID});
         }
 
-        const frame = Zcl.ZclFrame.create(
-            Zcl.FrameType.GLOBAL, options.direction, true,
-            options.manufacturerCode, options.transactionSequenceNumber ?? ZclTransactionSequenceNumber.next(), 'read',
-            cluster.ID, payload, options.reservedBits
+        const frame = Zcl.Frame.create(
+            Zcl.FrameType.GLOBAL,
+            optionsWithDefaults.direction,
+            true,
+            optionsWithDefaults.manufacturerCode,
+            optionsWithDefaults.transactionSequenceNumber ?? ZclTransactionSequenceNumber.next(),
+            'read',
+            cluster.ID,
+            payload,
+            {},
+            optionsWithDefaults.reservedBits,
         );
 
-        const log = `Read ${this.groupID} ${cluster.name}(${JSON.stringify(attributes)}, ${JSON.stringify(options)})`;
-        debug.info(log);
+        const createLogMessage = (): string =>
+            `Read ${this.groupID} ${cluster.name}(${JSON.stringify(attributes)}, ${JSON.stringify(optionsWithDefaults)})`;
+        logger.debug(createLogMessage, NS);
 
         try {
-            await Entity.adapter.sendZclFrameToGroup(this.groupID, frame, options.srcEndpoint);
+            await Entity.adapter!.sendZclFrameToGroup(this.groupID, frame, optionsWithDefaults.srcEndpoint);
         } catch (error) {
-            error.message = `${log} failed (${error.message})`;
-            debug.error(error.message);
+            const err = error as Error;
+            err.message = `${createLogMessage()} failed (${err.message})`;
+            logger.debug(err.stack!, NS);
+
             throw error;
         }
     }
 
-    public async command(
-        clusterKey: number | string, commandKey: number | string, payload: KeyValue, options?: Options
-    ): Promise<void> {
-        options = this.getOptionsWithDefaults(options, Zcl.Direction.CLIENT_TO_SERVER);
-        const cluster = Zcl.Utils.getCluster(clusterKey);
+    public async command(clusterKey: number | string, commandKey: number | string, payload: KeyValue, options?: Options): Promise<void> {
+        const optionsWithDefaults = this.getOptionsWithDefaults(options, Zcl.Direction.CLIENT_TO_SERVER);
+        const cluster = Zcl.Utils.getCluster(clusterKey, undefined, {});
         const command = cluster.getCommand(commandKey);
 
-        const log = `Command ${this.groupID} ${cluster.name}.${command.name}(${JSON.stringify(payload)})`;
-        debug.info(log);
+        const createLogMessage = (): string => `Command ${this.groupID} ${cluster.name}.${command.name}(${JSON.stringify(payload)})`;
+        logger.debug(createLogMessage, NS);
 
         try {
-            const frame = Zcl.ZclFrame.create(
-                Zcl.FrameType.SPECIFIC, options.direction, true, options.manufacturerCode,
-                options.transactionSequenceNumber || ZclTransactionSequenceNumber.next(),
-                command.ID, cluster.ID, payload, options.reservedBits
+            const frame = Zcl.Frame.create(
+                Zcl.FrameType.SPECIFIC,
+                optionsWithDefaults.direction,
+                true,
+                optionsWithDefaults.manufacturerCode,
+                optionsWithDefaults.transactionSequenceNumber || ZclTransactionSequenceNumber.next(),
+                command.ID,
+                cluster.ID,
+                payload,
+                {},
+                optionsWithDefaults.reservedBits,
             );
-            await Entity.adapter.sendZclFrameToGroup(this.groupID, frame, options.srcEndpoint);
+
+            await Entity.adapter!.sendZclFrameToGroup(this.groupID, frame, optionsWithDefaults.srcEndpoint);
         } catch (error) {
-            error.message = `${log} failed (${error.message})`;
-            debug.error(error.message);
+            const err = error as Error;
+            err.message = `${createLogMessage()} failed (${err.message})`;
+            logger.debug(err.stack!, NS);
+
             throw error;
         }
     }
 
-    private getOptionsWithDefaults(
-        options: Options, direction: Zcl.Direction
-    ): Options {
-        const providedOptions = options || {};
+    private getOptionsWithDefaults(options: Options | undefined, direction: Zcl.Direction): OptionsWithDefaults {
         return {
             direction,
-            srcEndpoint: null,
+            srcEndpoint: undefined,
             reservedBits: 0,
-            manufacturerCode: null,
-            transactionSequenceNumber: null,
-            ...providedOptions
+            manufacturerCode: undefined,
+            transactionSequenceNumber: undefined,
+            ...(options || {}),
         };
     }
 }

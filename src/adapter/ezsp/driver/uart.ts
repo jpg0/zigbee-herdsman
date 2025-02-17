@@ -1,27 +1,18 @@
-/* istanbul ignore file */
-import {EventEmitter} from 'events';
-import SerialPort from 'serialport';
-import net from 'net';
+/* v8 ignore start */
+
+import {EventEmitter} from 'node:events';
+import net from 'node:net';
+
+import {Queue, wait, Waitress} from '../../../utils';
+import {logger} from '../../../utils/logger';
+import {SerialPort} from '../../serialPort';
 import SocketPortUtils from '../../socketPortUtils';
-import {Deferred, crc16ccitt} from './utils';
-import * as stream from 'stream';
-import {Queue, Waitress} from '../../../utils';
-import Debug from "debug";
+import {SerialPortOptions} from '../../tstype';
+import {FrameType, Frame as NpiFrame} from './frame';
+import {Parser} from './parser';
+import {Writer} from './writer';
 
-const debug = Debug('zigbee-herdsman:adapter:ezsp:uart');
-
-
-const FLAG = 0x7E;  // Marks end of frame
-const ESCAPE = 0x7D;  // Indicates that the following byte is escaped
-const CANCEL = 0x1A;  // Terminates a frame in progress
-const XON = 0x11;  // Resume transmission
-const XOFF = 0x13;  // Stop transmission
-const SUBSTITUTE = 0x18;  // Replaces a byte received with a low-level communication error
-const STUFF = 0x20;
-const RESERVED = [FLAG, ESCAPE, XON, XOFF, SUBSTITUTE, CANCEL];
-const RANDOMIZE_START = 0x42;
-const RANDOMIZE_SEQ = 0xB8;
-
+const NS = 'zh:ezsp:uart';
 
 enum NcpResetCode {
     RESET_UNKNOWN_REASON = 0x00,
@@ -30,487 +21,421 @@ enum NcpResetCode {
     RESET_WATCHDOG = 0x03,
     RESET_ASSERT = 0x06,
     RESET_BOOTLOADER = 0x09,
-    RESET_SOFTWARE = 0x0B,
+    RESET_SOFTWARE = 0x0b,
     ERROR_EXCEEDED_MAXIMUM_ACK_TIMEOUT_COUNT = 0x51,
     ERROR_UNKNOWN_EM3XX_ERROR = 0x80,
 }
 
-
-class Parser extends stream.Transform {
-    private buffer: Buffer;
-
-    public constructor() {
-        super();
-        this.buffer = Buffer.from([]);
-    }
-
-    public _transform(chunk: Buffer, _: string, cb: () => void): void {
-        //debug(`<-- [${[...chunk]}]`);
-        if (chunk.indexOf(CANCEL) >= 0) {
-            this.buffer = Buffer.from([]);
-            chunk = chunk.slice((chunk.lastIndexOf(CANCEL) + 1));
-        }
-        if (chunk.indexOf(SUBSTITUTE) >= 0) {
-            this.buffer = Buffer.from([]);
-            chunk = chunk.slice((chunk.indexOf(FLAG) + 1));
-        }
-        this.buffer = Buffer.concat([this.buffer, chunk]);
-        this.parseNext();
-        cb();
-    }
-
-    private parseNext(): void {
-        //debug(`--- parseNext [${[...this.buffer]}]`);
-        if (this.buffer.length && this.buffer.indexOf(FLAG) >= 0) {
-            debug(`<-- [${this.buffer.toString('hex')}] [${[...this.buffer]}]`);
-            try {
-                const frame = this.extract_frame();
-                if (frame) {
-                    this.emit('parsed', frame);
-                }
-            } catch (error) {
-                debug(`<-- error ${error.stack}`);
-            }
-            this.parseNext();
-        }
-    }
-
-    private extract_frame(): Buffer {
-        /* Extract a frame from the data buffer */
-        const place = this.buffer.indexOf(FLAG);
-        if (place >= 0) {
-            // todo: check crc data
-            const result = this.unstuff(this.buffer.slice(0, (place + 1)));
-            this.buffer = this.buffer.slice((place + 1));
-            return result;
-        } else {
-            return null;
-        }
-    }
-
-    private unstuff(s: Buffer): Buffer {
-        /* Unstuff (unescape) a string after receipt */
-        let escaped = false;
-        const out = Buffer.alloc(s.length);
-        let outIdx = 0;
-        for (let idx = 0; idx < s.length; idx += 1) {
-            const c = s[idx];
-            if (escaped) {
-                out.writeUInt8(c ^ STUFF, outIdx++);
-                escaped = false;
-            } else {
-                if ((c === ESCAPE)) {
-                    escaped = true;
-                } else {
-                    out.writeUInt8(c, outIdx++);
-                }
-            }
-        }
-        return out;
-    }
-}
-
-class Writer extends stream.Readable {
-    public writeBuffer(buffer: Buffer): void {
-        debug(`--> [${buffer.toString('hex')}] [${[...buffer]}]`);
-        this.push(buffer);
-    }
-
-    public _read(): void {
-    }
-
-    public stuff(s: Iterable<number>): Buffer {
-        /* Byte stuff (escape) a string for transmission */
-        const out = Buffer.alloc(256);
-        let outIdx = 0;
-        for (const c of s) {
-            if (RESERVED.includes(c)) {
-                out.writeUInt8(ESCAPE, outIdx++);
-                out.writeUInt8(c ^ STUFF, outIdx++);
-            } else {
-                out.writeUInt8(c, outIdx++);
-            }
-        }
-        return out.slice(0, outIdx);
-    }
-}
-
 type EZSPPacket = {
-    sequence: number
+    sequence: number;
 };
 
 type EZSPPacketMatcher = {
-    sequence: number
+    sequence: number;
 };
 
-
 export class SerialDriver extends EventEmitter {
-    private serialPort: SerialPort;
-    private socketPort: net.Socket;
+    private serialPort?: SerialPort;
+    private socketPort?: net.Socket;
     private writer: Writer;
     private parser: Parser;
     private initialized: boolean;
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-    private resetDeferred: Deferred<any>;
-    private portType: 'serial' | 'socket';
     private sendSeq = 0; // next frame number to send
     private recvSeq = 0; // next frame number to receive
-    private ackSeq = 0;  // next number after the last accepted frame
+    private ackSeq = 0; // next number after the last accepted frame
+    private rejectCondition = false;
     private waitress: Waitress<EZSPPacket, EZSPPacketMatcher>;
     private queue: Queue;
 
     constructor() {
         super();
         this.initialized = false;
-        this.queue = new Queue();
-        this.waitress = new Waitress<EZSPPacket, EZSPPacketMatcher>(
-            this.waitressValidator, this.waitressTimeoutFormatter);
+        this.queue = new Queue(1);
+        this.waitress = new Waitress<EZSPPacket, EZSPPacketMatcher>(this.waitressValidator, this.waitressTimeoutFormatter);
+        this.writer = new Writer();
+        this.parser = new Parser();
     }
 
-    async connect(path: string, options: Record<string, number|boolean>): Promise<void> {
-        this.portType = SocketPortUtils.isTcpPath(path) ? 'socket' : 'serial';
-        if (this.portType === 'serial') {
-            await this.openSerialPort(path, options);
+    async connect(options: SerialPortOptions): Promise<void> {
+        if (SocketPortUtils.isTcpPath(options.path!)) {
+            await this.openSocketPort(options.path!);
         } else {
-            await this.openSocketPort(path);
+            await this.openSerialPort(options.path!, options.baudRate!, options.rtscts!);
         }
     }
 
-    private async openSerialPort(path: string, opt: Record<string, number|boolean>): Promise<void> {
+    private async openSerialPort(path: string, baudRate: number, rtscts: boolean): Promise<void> {
         const options = {
-            baudRate: typeof opt.baudRate === 'number' ? opt.baudRate : 115200, 
-            rtscts: typeof opt.rtscts === 'boolean' ? opt.rtscts : false,
-            autoOpen: false
+            path,
+            baudRate: typeof baudRate === 'number' ? baudRate : 115200,
+            rtscts: typeof rtscts === 'boolean' ? rtscts : false,
+            autoOpen: false,
+            parity: 'none',
+            stopBits: 1,
+            xon: false,
+            xoff: false,
         };
 
-        debug(`Opening SerialPort with ${path} and ${JSON.stringify(options)}`);
-        this.serialPort = new SerialPort(path, options);
+        // enable software flow control if RTS/CTS not enabled in config
+        if (!options.rtscts) {
+            logger.debug(`RTS/CTS config is off, enabling software flow control.`, NS);
+            options.xon = true;
+            options.xoff = true;
+        }
 
-        this.writer = new Writer();
+        logger.debug(`Opening SerialPort with ${JSON.stringify(options)}`, NS);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
+        this.serialPort = new SerialPort(options);
+
         this.writer.pipe(this.serialPort);
 
-        this.parser = new Parser();
         this.serialPort.pipe(this.parser);
         this.parser.on('parsed', this.onParsed.bind(this));
 
-        return new Promise((resolve, reject): void => {
-            this.serialPort.open(async (error): Promise<void> => {
-                if (error) {
-                    reject(new Error(`Error while opening serialport '${error}'`));
-                    this.initialized = false;
-                    if (this.serialPort.isOpen) {
-                        this.serialPort.close();
-                    }
-                } else {
-                    debug('Serialport opened');
-                    this.serialPort.once('close', this.onPortClose.bind(this));
-                    this.serialPort.once('error', (error) => {
-                        debug(`Serialport error: ${error}`);
-                    });
-                    // reset
-                    await this.reset();
-                    this.initialized = true;
-                    this.emit('connected');
-                    resolve();
-                }
-            });
-        });
+        try {
+            await this.serialPort.asyncOpen();
+            logger.debug('Serialport opened', NS);
+
+            this.serialPort.once('close', this.onPortClose.bind(this));
+            this.serialPort.on('error', this.onPortError.bind(this));
+
+            // reset
+            await this.reset();
+
+            this.initialized = true;
+        } catch (error) {
+            this.initialized = false;
+
+            if (this.serialPort.isOpen) {
+                this.serialPort.close();
+            }
+
+            throw error;
+        }
     }
 
     private async openSocketPort(path: string): Promise<void> {
         const info = SocketPortUtils.parseTcpPath(path);
-        debug(`Opening TCP socket with ${info.host}:${info.port}`);
+        logger.debug(`Opening TCP socket with ${info.host}:${info.port}`, NS);
 
         this.socketPort = new net.Socket();
         this.socketPort.setNoDelay(true);
         this.socketPort.setKeepAlive(true, 15000);
 
-        this.writer = new Writer();
         this.writer.pipe(this.socketPort);
 
-        this.parser = new Parser();
         this.socketPort.pipe(this.parser);
         this.parser.on('parsed', this.onParsed.bind(this));
 
-        return new Promise((resolve, reject): void => {
-            this.socketPort.on('connect', function () {
-                debug('Socket connected');
-            });
+        return await new Promise((resolve, reject): void => {
+            const openError = (err: Error): void => {
+                this.initialized = false;
 
-            // eslint-disable-next-line
-            const self = this;
-            this.socketPort.on('ready', async (): Promise<void> => {
-                debug('Socket ready');
+                reject(err);
+            };
+
+            this.socketPort!.on('connect', () => {
+                logger.debug('Socket connected', NS);
+            });
+            this.socketPort!.on('ready', async (): Promise<void> => {
+                logger.debug('Socket ready', NS);
+                this.socketPort!.removeListener('error', openError);
+                this.socketPort!.once('close', this.onPortClose.bind(this));
+                this.socketPort!.on('error', this.onPortError.bind(this));
+
                 // reset
                 await this.reset();
-                self.initialized = true;
-                this.emit('connected');
+
+                this.initialized = true;
+
                 resolve();
             });
+            this.socketPort!.once('error', openError);
 
-            this.socketPort.once('close', this.onPortClose.bind(this));
-
-            this.socketPort.on('error', function () {
-                debug('Socket error');
-                reject(new Error(`Error while opening socket`));
-                self.initialized = false;
-            });
-
-            this.socketPort.connect(info.port, info.host);
+            this.socketPort!.connect(info.port, info.host);
         });
     }
 
-    private onParsed(data: Buffer): void {
+    private async onParsed(frame: NpiFrame): Promise<void> {
+        const rejectCondition = this.rejectCondition;
         try {
+            frame.checkCRC();
+
             /* Frame receive handler */
-            switch (true) {
-            case ((data[0] & 0x80) === 0):
-                debug(`Recv DATA frame (${(data[0] & 0x70) >> 4},`+
-                    `${data[0] & 0x07},${(data[0] & 0x08) >> 3}): ${data.toString('hex')}`);
-                this.handleDATA(data);
-                break;
-
-            case ((data[0] & 0xE0) === 0x80):
-                debug(`Recv ACK  frame (${data[0] & 0x07}): ${data.toString('hex')}`);
-                this.handleACK(data[0]);
-                break;
-
-            case ((data[0] & 0xE0) === 0xA0):
-                debug(`Recv NAK  frame (${data[0] & 0x07}): ${data.toString('hex')}`);
-                this.handleNAK(data[0]);
-                break;
-
-            case (data[0] === 0xC0):
-                debug(`Recv RST  frame: ${data.toString('hex')}`);
-                break;
-
-            case (data[0] === 0xC1):
-                debug(`RSTACK frame: ${data.toString('hex')}`);
-                this.rstack_frame_received(data);
-                break;
-
-            case (data[0] === 0xC2):
-                debug(`Error frame : ${data.toString('hex')}`);
-                break;
-            default:
-                debug("UNKNOWN FRAME RECEIVED: %r", data);
+            switch (frame.type) {
+                case FrameType.DATA:
+                    this.handleDATA(frame);
+                    break;
+                case FrameType.ACK:
+                    this.handleACK(frame);
+                    break;
+                case FrameType.NAK:
+                    this.handleNAK(frame);
+                    break;
+                case FrameType.RST:
+                    this.handleRST(frame);
+                    break;
+                case FrameType.RSTACK:
+                    this.handleRSTACK(frame);
+                    break;
+                case FrameType.ERROR:
+                    await this.handleError(frame);
+                    break;
+                default:
+                    this.rejectCondition = true;
+                    logger.debug(`UNKNOWN FRAME RECEIVED: ${frame}`, NS);
             }
-
         } catch (error) {
-            debug(`Error while parsing to ZpiObject '${error.stack}'`);
+            this.rejectCondition = true;
+            logger.error(`Error while parsing to NpiFrame '${error}'`, NS);
+            logger.debug((error as Error).stack!, NS);
+        }
+
+        // We send NAK only if the rejectCondition was set in the current processing
+        if (!rejectCondition && this.rejectCondition) {
+            // send NAK
+            this.writer.sendNAK(this.recvSeq);
         }
     }
 
-    private handleDATA(data: Buffer): void {
+    private handleDATA(frame: NpiFrame): void {
         /* Data frame receive handler */
-        const frmNum = (data[0] & 0x70) >> 4;
-        //const ackNum = data[0] & 0x07;
-        //const reTx = (data[0] & 0x08) >> 3;
-        // if (seq !== this.recvSeq) {
-        //     debug('NAK-NAK');
-        // }
+        const frmNum = (frame.control & 0x70) >> 4;
+        const reTx = (frame.control & 0x08) >> 3;
+
+        logger.debug(`<-- DATA (${frmNum},${frame.control & 0x07},${reTx}): ${frame}`, NS);
+
+        // Expected package {recvSeq}, but received {frmNum}
+        // This happens when the chip sends us a reTx packet, but we are waiting for the next one
+        if (this.recvSeq != frmNum) {
+            if (reTx) {
+                // if the reTx flag is set, then this is a packet replay
+                logger.debug(`Unexpected DATA packet sequence ${frmNum} | ${this.recvSeq}: packet replay`, NS);
+            } else {
+                // otherwise, the sequence of packets is out of order - skip or send NAK is needed
+                logger.debug(`Unexpected DATA packet sequence ${frmNum} | ${this.recvSeq}: reject condition`, NS);
+                this.rejectCondition = true;
+                return;
+            }
+        }
+
+        this.rejectCondition = false;
+
         this.recvSeq = (frmNum + 1) & 7; // next
-        this.sendACK(this.recvSeq);
-        this.handleACK(data[0]);
-        data = data.slice(1, (-3));
-        const frame = this.randomize(data);
-        this.emit('received', frame);
+
+        logger.debug(`--> ACK  (${this.recvSeq})`, NS);
+
+        this.writer.sendACK(this.recvSeq);
+
+        const handled = this.handleACK(frame);
+
+        if (reTx && !handled) {
+            // if the package is resent and did not expect it,
+            // then will skip it - already processed it earlier
+            logger.debug(`Skipping the packet as repeated (${this.recvSeq})`, NS);
+
+            return;
+        }
+
+        const data = frame.buffer.subarray(1, -3);
+
+        this.emit('received', NpiFrame.makeRandomizedBuffer(data));
     }
 
-    private handleACK(control: number): void {
+    private handleACK(frame: NpiFrame): boolean {
         /* Handle an acknowledgement frame */
         // next number after the last accepted frame
-        this.ackSeq = control & 0x07;
-        // const handled = this.waitress.resolve({sequence: this.ackSeq});
-        // if (!handled) {
-        //     debug(`Unexpected packet sequence ${this.ackSeq}`);
-        // } else {
-        //     debug(`Expected packet sequence ${this.ackSeq}`);
-        // }
-        // var ack, pending;
-        // ack = (((control & 7) - 1) % 8);
-        // if ((ack === this._pending[0])) {
-        //     [pending, this._pending] = [this._pending, [(- 1), null]];
-        //     pending[1].set_result(true);
-        // }
+        this.ackSeq = frame.control & 0x07;
+
+        logger.debug(`<-- ACK (${this.ackSeq}): ${frame}`, NS);
+
+        const handled = this.waitress.resolve({sequence: this.ackSeq});
+
+        if (!handled && this.sendSeq !== this.ackSeq) {
+            // Packet confirmation received for {ackSeq}, but was expected {sendSeq}
+            // This happens when the chip has not yet received of the packet {sendSeq} from us,
+            // but has already sent us the next one.
+            logger.debug(`Unexpected packet sequence ${this.ackSeq} | ${this.sendSeq}`, NS);
+        }
+
+        return handled;
     }
 
-    private handleNAK(control: number): void {
+    private handleNAK(frame: NpiFrame): void {
         /* Handle negative acknowledgment frame */
-        const nakNum = control & 0x07;
+        const nakNum = frame.control & 0x07;
+
+        logger.debug(`<-- NAK (${nakNum}): ${frame}`, NS);
+
         const handled = this.waitress.reject({sequence: nakNum}, 'Recv NAK frame');
+
         if (!handled) {
             // send NAK
-            debug(`NAK Unexpected packet sequence ${nakNum}`);
+            logger.debug(`NAK Unexpected packet sequence ${nakNum}`, NS);
         } else {
-            debug(`NAK Expected packet sequence ${nakNum}`);
+            logger.debug(`NAK Expected packet sequence ${nakNum}`, NS);
         }
-        // if ((nak === this._pending[0])) {
-        //     this._pending[1].set_result(false);
-        // }
     }
 
-    private rstack_frame_received(data: Buffer): void {
+    private handleRST(frame: NpiFrame): void {
+        logger.debug(`<-- RST:  ${frame}`, NS);
+    }
+
+    private handleRSTACK(frame: NpiFrame): void {
         /* Reset acknowledgement frame receive handler */
         let code;
-        this.sendSeq = 0;
-        this.recvSeq = 0;
+        this.rejectCondition = false;
+
+        logger.debug(`<-- RSTACK ${frame}`, NS);
+
         try {
-            code = NcpResetCode[data[2]];
-        } catch (e) {
+            code = NcpResetCode[frame.buffer[2]];
+        } catch {
             code = NcpResetCode.ERROR_UNKNOWN_EM3XX_ERROR;
         }
-        debug("RSTACK Version: %d Reason: %s frame: %s", data[1], code.toString(), data.toString('hex'));
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-        if (NcpResetCode[<any>code].toString() !== NcpResetCode.RESET_SOFTWARE.toString()) {
+
+        logger.debug(`RSTACK Version: ${frame.buffer[1]} Reason: ${code.toString()} frame: ${frame}`, NS);
+
+        if (NcpResetCode[<number>code].toString() !== NcpResetCode.RESET_SOFTWARE.toString()) {
             return;
         }
-        if ((!this.resetDeferred)) {
-            debug("Reset future is None");
-            return;
+
+        this.waitress.resolve({sequence: -1});
+    }
+
+    private async handleError(frame: NpiFrame): Promise<void> {
+        logger.debug(`<-- Error ${frame}`, NS);
+
+        try {
+            // send reset
+            await this.reset();
+        } catch (error) {
+            logger.error(`Failed to reset on Error Frame: ${error}`, NS);
         }
-        this.resetDeferred.resolve(true);
-    }
-
-    private make_frame(control: ArrayLike<number>, data?: ArrayLike<number>): Buffer {
-        /* Construct a frame */
-        const ctrlArr: Array<number> = Array.from(control);
-        const dataArr: Array<number> = (data && Array.from(data)) || [];
-
-        const sum = ctrlArr.concat(dataArr);
-
-        const crc = crc16ccitt(Buffer.from(sum), 65535);
-        const crcArr = [(crc >> 8), (crc % 256)];
-        return Buffer.concat([this.writer.stuff(sum.concat(crcArr)), Buffer.from([FLAG])]);
-    }
-
-    private randomize(s: Buffer): Buffer {
-        /*XOR s with a pseudo-random sequence for transmission
-        Used only in data frames
-        */
-        let rand = RANDOMIZE_START;
-        const out = Buffer.alloc(s.length);
-        let outIdx = 0;
-        for (const c of s) {
-            out.writeUInt8(c ^ rand, outIdx++);
-            if ((rand % 2)) {
-                rand = ((rand >> 1) ^ RANDOMIZE_SEQ);
-            } else {
-                rand = (rand >> 1);
-            }
-        }
-        return out;
-    }
-
-    private makeDataFrame(data: Buffer, seq: number, rxmit: number, ackSeq: number): Buffer {
-        /* Construct a data frame */
-        const control = (((seq << 4) | (rxmit << 3)) | ackSeq);
-        return this.make_frame([control], this.randomize(data));
     }
 
     async reset(): Promise<void> {
-        // return this._gw.reset();
-        debug('uart reseting');
-        if ((this.resetDeferred)) {
-            throw new TypeError("reset can only be called on a new connection");
-        }
-        /* Construct a reset frame */
-        const rst_frame = Buffer.concat([Buffer.from([CANCEL]), this.make_frame([0xC0])]);
-        debug(`Write reset`);
-        this.resetDeferred = new Deferred<void>();
-        this.writer.writeBuffer(rst_frame);
-        return this.resetDeferred.promise;
-    }
+        logger.debug('Uart reseting', NS);
+        this.parser.reset();
+        this.queue.clear();
+        this.sendSeq = 0;
+        this.recvSeq = 0;
 
-    public close(): Promise<void> {
-        return new Promise((resolve, reject): void => {
-            if (this.initialized) {
-                if (this.portType === 'serial') {
-                    this.serialPort.flush((): void => {
-                        this.serialPort.close((error): void => {
-                            this.initialized = false;
-                            error == null ?
-                                resolve() :
-                                reject(new Error(`Error while closing serialport '${error}'`));
-                            this.emit('close');
-                        });
-                    });
-                } else {
-                    this.socketPort.destroy();
-                    resolve();
-                }
-            } else {
-                resolve();
-                this.emit('close');
+        return await this.queue.execute<void>(async (): Promise<void> => {
+            try {
+                logger.debug(`--> Write reset`, NS);
+                const waiter = this.waitFor(-1, 10000);
+                this.rejectCondition = false;
+
+                this.writer.sendReset();
+                logger.debug(`-?- waiting reset`, NS);
+                await waiter.start().promise;
+                logger.debug(`-+- waiting reset success`, NS);
+
+                await wait(2000);
+            } catch (e) {
+                logger.error(`--> Error: ${e}`, NS);
+
+                this.emit('reset');
+
+                throw new Error(`Reset error: ${e}`);
             }
         });
     }
 
-    private onPortClose(): void {
-        debug('Port closed');
-        this.resetDeferred = undefined;
-        this.initialized = false;
-        this.emit('close');
+    public async close(emitClose: boolean): Promise<void> {
+        logger.debug('Closing UART', NS);
+        this.queue.clear();
+
+        if (this.initialized) {
+            this.initialized = false;
+
+            if (this.serialPort) {
+                try {
+                    await this.serialPort.asyncFlushAndClose();
+                } catch (error) {
+                    if (emitClose) {
+                        this.emit('close');
+                    }
+
+                    throw error;
+                }
+            } else {
+                this.socketPort!.destroy();
+            }
+        }
+
+        if (emitClose) {
+            this.emit('close');
+        }
+    }
+
+    private onPortError(error: Error): void {
+        logger.error(`Port error: ${error}`, NS);
+    }
+
+    private onPortClose(err: boolean | Error): void {
+        logger.debug(`Port closed. Error? ${err}`, NS);
+
+        // on error: serialport passes an Error object (in case of disconnect)
+        //           net.Socket passes a boolean (in case of a transmission error)
+        // try to reset instead of failing immediately
+        if (err != null && err !== false) {
+            this.emit('reset');
+        } else {
+            this.initialized = false;
+            this.emit('close');
+        }
     }
 
     public isInitialized(): boolean {
         return this.initialized;
     }
 
-    private sendACK(ackNum: number): void {
-        /* Construct a acknowledgement frame */
-        const ackFrame = this.make_frame([(0b10000000 | ackNum)]);
-        debug(`Send ACK  frame (${ackNum})`);
-        this.writer.writeBuffer(ackFrame);
-    }
-
     public async sendDATA(data: Buffer): Promise<void> {
         const seq = this.sendSeq;
-        this.sendSeq = ((seq + 1) % 8);  // next
+        this.sendSeq = (seq + 1) % 8; // next
         const nextSeq = this.sendSeq;
         const ackSeq = this.recvSeq;
-        let pack;
 
-        return this.queue.execute<void>(async (): Promise<void> => {
-            debug(`Send DATA frame (${seq},${ackSeq},0): ${data.toString('hex')}`);
-            pack = this.makeDataFrame(data, seq, 0, ackSeq);
-            // const waiter = this.waitFor(nextSeq).start();
-            debug(`waiting (${nextSeq})`);
-            this.writer.writeBuffer(pack);
-            // await waiter.promise.catch(async () => {
-            //     debug(`break waiting (${nextSeq})`);
-            //     debug(`Can't send DATA frame (${seq},${ackSeq},0): ${data.toString('hex')}`);
-            //     debug(`Resend DATA frame (${seq},${ackSeq},1): ${data.toString('hex')}`);
-            //     pack = this.makeDataFrame(data, seq, 1, ackSeq);
-            //     const waiter = this.waitFor(nextSeq).start();
-            //     debug(`rewaiting (${nextSeq})`);
-            //     this.writer.writeBuffer(pack);
-            //     await waiter.promise.catch((e) => {
-            //         debug(`break rewaiting (${nextSeq})`);
-            //         debug(`Can't resend DATA frame (${seq},${ackSeq},1): ${data.toString('hex')}`);
-            //         throw new Error(`sendDATA error: ${e}`);
-            //     });
-            //     debug(`rewaiting (${nextSeq}) success`);
-            // });
-            debug(`waiting (${nextSeq}) success`);
+        return await this.queue.execute<void>(async (): Promise<void> => {
+            const randData = NpiFrame.makeRandomizedBuffer(data);
+
+            try {
+                const waiter = this.waitFor(nextSeq);
+                logger.debug(`--> DATA (${seq},${ackSeq},0): ${data.toString('hex')}`, NS);
+                this.writer.sendData(randData, seq, 0, ackSeq);
+                logger.debug(`-?- waiting (${nextSeq})`, NS);
+                await waiter.start().promise;
+                logger.debug(`-+- waiting (${nextSeq}) success`, NS);
+            } catch (e1) {
+                logger.error(`--> Error: ${e1}`, NS);
+                logger.error(`-!- break waiting (${nextSeq})`, NS);
+                logger.error(`Can't send DATA frame (${seq},${ackSeq},0): ${data.toString('hex')}`, NS);
+
+                try {
+                    await wait(500);
+                    const waiter = this.waitFor(nextSeq);
+                    logger.debug(`->> DATA (${seq},${ackSeq},1): ${data.toString('hex')}`, NS);
+                    this.writer.sendData(randData, seq, 1, ackSeq);
+                    logger.debug(`-?- rewaiting (${nextSeq})`, NS);
+                    await waiter.start().promise;
+                    logger.debug(`-+- rewaiting (${nextSeq}) success`, NS);
+                } catch (e2) {
+                    logger.error(`--> Error: ${e2}`, NS);
+                    logger.error(`-!- break rewaiting (${nextSeq})`, NS);
+                    logger.error(`Can't resend DATA frame (${seq},${ackSeq},1): ${data.toString('hex')}`, NS);
+                    if (this.initialized) {
+                        this.emit('reset');
+                    }
+                    throw new Error(`sendDATA error: try 1: ${e1}, try 2: ${e2}`);
+                }
+            }
         });
-
-
-        // try {
-        //     debug(`Send DATA frame (${seq},${this.recvSeq},0): ${data.toString('hex')}`);
-        //     pack = this.data_frame(data, seq, 0);
-        //     this.writer.writeBuffer(pack);
-        // } catch (e) {
-        //     debug(`Send DATA frame (${seq},${this.recvSeq},1): ${data.toString('hex')}`);
-        //     pack = this.data_frame(data, seq, 1);
-        //     this.writer.writeBuffer(pack);
-        // }
     }
 
-    public waitFor(sequence: number, timeout = 10000)
-        : { start: () => { promise: Promise<EZSPPacket>; ID: number }; ID: number } {
+    public waitFor(sequence: number, timeout = 4000): {start: () => {promise: Promise<EZSPPacket>; ID: number}; ID: number} {
         return this.waitress.waitFor({sequence}, timeout);
     }
 
@@ -519,6 +444,6 @@ export class SerialDriver extends EventEmitter {
     }
 
     private waitressValidator(payload: EZSPPacket, matcher: EZSPPacketMatcher): boolean {
-        return (payload.sequence === matcher.sequence);
+        return payload.sequence === matcher.sequence;
     }
 }

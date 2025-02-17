@@ -1,11 +1,12 @@
-import * as stream from 'stream';
-import {DataStart, SOF, MinMessageLength, PositionDataLength} from './constants';
-import Frame from './frame';
-import Debug from "debug";
+import * as stream from 'node:stream';
 
-const debug = Debug('zigbee-herdsman:adapter:zStack:unpi:parser');
+import {logger} from '../../../utils/logger';
+import {DataStart, MinMessageLength, PositionDataLength, SOF} from './constants';
+import {Frame} from './frame';
 
-class Parser extends stream.Transform {
+const NS = 'zh:zstack:unpi:parser';
+
+export class Parser extends stream.Transform {
     private buffer: Buffer;
 
     public constructor() {
@@ -13,15 +14,15 @@ class Parser extends stream.Transform {
         this.buffer = Buffer.from([]);
     }
 
-    public _transform(chunk: Buffer, _: string, cb: () => void): void {
-        debug(`<-- [${[...chunk]}]`);
+    public override _transform(chunk: Buffer, _: string, cb: () => void): void {
+        logger.debug(`<-- [${[...chunk]}]`, NS);
         this.buffer = Buffer.concat([this.buffer, chunk]);
         this.parseNext();
         cb();
     }
 
     private parseNext(): void {
-        debug(`--- parseNext [${[...this.buffer]}]`);
+        logger.debug(`--- parseNext [${[...this.buffer]}]`, NS);
 
         if (this.buffer.length !== 0 && this.buffer.readUInt8(0) !== SOF) {
             // Buffer doesn't start with SOF, skip till SOF.
@@ -41,10 +42,10 @@ class Parser extends stream.Transform {
 
                 try {
                     const frame = Frame.fromBuffer(dataLength, fcsPosition, frameBuffer);
-                    debug(`--> parsed ${frame}`);
+                    logger.debug(`--> parsed ${frame}`, NS);
                     this.emit('parsed', frame);
                 } catch (error) {
-                    debug(`--> error ${error.stack}`);
+                    logger.debug(`--> error ${error}`, NS);
                 }
 
                 this.buffer = this.buffer.slice(frameLength, this.buffer.length);
@@ -53,5 +54,3 @@ class Parser extends stream.Transform {
         }
     }
 }
-
-export default Parser;

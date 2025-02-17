@@ -1,14 +1,12 @@
-/* istanbul ignore file */
+/* v8 ignore start */
+
+import {logger} from '../../../utils/logger';
 import {Driver} from './driver';
 import {EzspConfigId} from './types';
 import {EmberStatus} from './types/named';
 import {EmberMulticastTableEntry} from './types/struct';
-import Debug from "debug";
 
-const debug = {
-    log: Debug('zigbee-herdsman:adapter:ezsp:multicast'),
-};
-
+const NS = 'zh:ezsp:cast';
 
 export class Multicast {
     TABLE_SIZE = 16;
@@ -25,12 +23,10 @@ export class Multicast {
     }
 
     private async _initialize(): Promise<void> {
-        const size = await this.driver.ezsp.getConfigurationValue(
-            EzspConfigId.CONFIG_MULTICAST_TABLE_SIZE
-        );
+        const size = await this.driver.ezsp.getConfigurationValue(EzspConfigId.CONFIG_MULTICAST_TABLE_SIZE);
         for (let i = 0; i < size; i++) {
             const entry = await this.driver.ezsp.getMulticastTableEntry(i);
-            debug.log("MulticastTableEntry[%s] = %s", i, entry);
+            logger.debug(`MulticastTableEntry[${i}] = ${entry}`, NS);
             if (entry.endpoint !== 0) {
                 this._multicast[entry.multicastId] = [entry, i];
             } else {
@@ -41,20 +37,18 @@ export class Multicast {
 
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
     async startup(enpoints: Array<any>): Promise<void> {
-        return this.driver.queue.execute<void>(async () => {
-            await this._initialize();
-            for (const ep of enpoints) {
-                if (!ep.id) continue;
-                for (const group_id of ep.member_of) {
-                    await this.subscribe(group_id, ep.id);
-                }
+        await this._initialize();
+        for (const ep of enpoints) {
+            if (!ep.id) continue;
+            for (const group_id of ep.member_of) {
+                await this.subscribe(group_id, ep.id);
             }
-        });
+        }
     }
 
     public async subscribe(group_id: number, endpoint: number): Promise<EmberStatus> {
-        if (this._multicast.hasOwnProperty(group_id)) {
-            debug.log("%s is already subscribed", group_id);
+        if (this._multicast[group_id] !== undefined) {
+            logger.debug(`${group_id} is already subscribed`, NS);
             return EmberStatus.SUCCESS;
         }
 
@@ -64,28 +58,18 @@ export class Multicast {
             entry.endpoint = endpoint;
             entry.multicastId = group_id;
             entry.networkIndex = 0;
-            const [status] = await this.driver.ezsp.setMulticastTableEntry(idx, entry);
+            const status = await this.driver.ezsp.setMulticastTableEntry(idx, entry);
             if (status !== EmberStatus.SUCCESS) {
-                debug.log(
-                    "Set MulticastTableEntry #%s for %s multicast id: %s",
-                    idx,
-                    entry.multicastId,
-                    status,
-                );
+                logger.error(`Set MulticastTableEntry #${idx} for ${entry.multicastId} multicast id: ${status}`, NS);
                 this._available.push(idx);
                 return status;
             }
 
             this._multicast[entry.multicastId] = [entry, idx];
-            debug.log(
-                "Set MulticastTableEntry #%s for %s multicast id: %s",
-                idx,
-                entry.multicastId,
-                status,
-            );
+            logger.debug(`Set MulticastTableEntry #${idx} for ${entry.multicastId} multicast id: ${status}`, NS);
             return status;
-        } catch (e) {
-            debug.log("No more available slots MulticastId subscription");
+        } catch (error) {
+            logger.error(`No more available slots MulticastId subscription (${(error as Error).stack})`, NS);
             return EmberStatus.INDEX_OUT_OF_RANGE;
         }
     }

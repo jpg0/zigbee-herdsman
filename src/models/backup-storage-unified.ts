@@ -1,26 +1,29 @@
 /**
  * Unified configuration storage model based on
  * [zigpy/open-coordinator-backup](https://github.com/zigpy/open-coordinator-backup).
- * 
+ *
  * This format should allow for seamless migration between adapter types or event vendors.
  */
 export interface UnifiedBackupStorage {
     metadata: {
-        format: "zigpy/open-coordinator-backup";
+        format: 'zigpy/open-coordinator-backup';
         version: 1;
         source: string;
         internal: {
             /* zigbee-herdsman specific data */
             date: string;
-            znpVersion: number;
+            znpVersion?: number;
+            ezspVersion?: number;
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            [key: string]: any;
+            [key: string]: unknown;
         };
     };
     stack_specific?: {
         zstack?: {
             tclk_seed?: string;
+        };
+        ezsp?: {
+            hashed_tclk?: string;
         };
     };
     coordinator_ieee: string;
@@ -39,10 +42,6 @@ export interface UnifiedBackupStorage {
         nwk_address: string | null;
         ieee_address: string;
         is_child: boolean;
-        link_key: {
-            key: string;
-            rx_counter: number;
-            tx_counter: number;
-        } | null;
+        link_key: {key: string; rx_counter: number; tx_counter: number} | undefined;
     }[];
 }

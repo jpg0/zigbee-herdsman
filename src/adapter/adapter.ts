@@ -1,31 +1,50 @@
+import events from 'node:events';
+
+import * as Models from '../models';
+import {BroadcastAddress} from '../zspec/enums';
+import * as Zcl from '../zspec/zcl';
+import * as Zdo from '../zspec/zdo';
+import * as ZdoTypes from '../zspec/zdo/definition/tstypes';
+import {discoverAdapter} from './adapterDiscovery';
+import * as AdapterEvents from './events';
 import * as TsType from './tstype';
-import {ZclDataPayload} from './events';
-import events from 'events';
-import {ZclFrame, FrameType, Direction} from '../zcl';
-import Debug from "debug";
-import {LoggerStub} from "../controller/logger-stub";
-import * as Models from "../models";
 
-const debug = Debug("zigbee-herdsman:adapter");
+interface AdapterEventMap {
+    deviceJoined: [payload: AdapterEvents.DeviceJoinedPayload];
+    zclPayload: [payload: AdapterEvents.ZclPayload];
+    zdoResponse: [clusterId: Zdo.ClusterId, response: ZdoTypes.GenericZdoResponse];
+    disconnected: [];
+    deviceLeave: [payload: AdapterEvents.DeviceLeavePayload];
+}
 
-abstract class Adapter extends events.EventEmitter {
-    public readonly greenPowerGroup = 0x0b84;
+type AdapterConstructor = new (
+    networkOptions: TsType.NetworkOptions,
+    serialPortOptions: TsType.SerialPortOptions,
+    backupPath: string,
+    adapterOptions: TsType.AdapterOptions,
+) => Adapter;
+
+export abstract class Adapter extends events.EventEmitter<AdapterEventMap> {
+    public hasZdoMessageOverhead: boolean;
+    public manufacturerID: Zcl.ManufacturerCode;
     protected networkOptions: TsType.NetworkOptions;
     protected adapterOptions: TsType.AdapterOptions;
     protected serialPortOptions: TsType.SerialPortOptions;
     protected backupPath: string;
-    protected logger?: LoggerStub;
 
     protected constructor(
-        networkOptions: TsType.NetworkOptions, serialPortOptions: TsType.SerialPortOptions, backupPath: string,
-        adapterOptions: TsType.AdapterOptions, logger?: LoggerStub)
-    {
+        networkOptions: TsType.NetworkOptions,
+        serialPortOptions: TsType.SerialPortOptions,
+        backupPath: string,
+        adapterOptions: TsType.AdapterOptions,
+    ) {
         super();
+        this.hasZdoMessageOverhead = true;
+        this.manufacturerID = Zcl.ManufacturerCode.RESERVED_10;
         this.networkOptions = networkOptions;
         this.adapterOptions = adapterOptions;
         this.serialPortOptions = serialPortOptions;
         this.backupPath = backupPath;
-        this.logger = logger;
     }
 
     /**
@@ -37,72 +56,36 @@ abstract class Adapter extends events.EventEmitter {
         serialPortOptions: TsType.SerialPortOptions,
         backupPath: string,
         adapterOptions: TsType.AdapterOptions,
-        logger?: LoggerStub,
     ): Promise<Adapter> {
-        const {ZStackAdapter} = await import('./z-stack/adapter');
-        const {DeconzAdapter} = await import('./deconz/adapter');
-        const {ZiGateAdapter} = await import('./zigate/adapter');
-        const {EZSPAdapter} = await import('./ezsp/adapter');
-        type AdapterImplementation = (typeof ZStackAdapter | typeof DeconzAdapter | typeof ZiGateAdapter
-            | typeof EZSPAdapter);
+        const adapterLookup = {
+            deconz: ['./deconz/adapter/deconzAdapter', 'DeconzAdapter'],
+            ember: ['./ember/adapter/emberAdapter', 'EmberAdapter'],
+            ezsp: ['./ezsp/adapter/ezspAdapter', 'EZSPAdapter'],
+            zstack: ['./z-stack/adapter/zStackAdapter', 'ZStackAdapter'],
+            zboss: ['./zboss/adapter/zbossAdapter', 'ZBOSSAdapter'],
+            zigate: ['./zigate/adapter/zigateAdapter', 'ZiGateAdapter'],
+        };
+        const [adapter, path] = await discoverAdapter(serialPortOptions.adapter, serialPortOptions.path);
+        const detectedAdapter = adapterLookup[adapter];
 
-        let adapters: AdapterImplementation[];
-        const adapterLookup = {zstack: ZStackAdapter, deconz: DeconzAdapter, zigate: ZiGateAdapter,
-            ezsp: EZSPAdapter};
-        if (serialPortOptions.adapter && serialPortOptions.adapter !== 'auto') {
-            if (adapterLookup.hasOwnProperty(serialPortOptions.adapter)) {
-                adapters = [adapterLookup[serialPortOptions.adapter]];
-            } else {
-                throw new Error(
-                    `Adapter '${serialPortOptions.adapter}' does not exists, possible ` +
-                    `options: ${Object.keys(adapterLookup).join(', ')}`
-                );
-            }
+        if (detectedAdapter) {
+            serialPortOptions.adapter = adapter;
+            serialPortOptions.path = path;
+
+            const adapterModule = await import(detectedAdapter[0]);
+            const AdapterCtor = adapterModule[detectedAdapter[1]] as AdapterConstructor;
+
+            return new AdapterCtor(networkOptions, serialPortOptions, backupPath, adapterOptions);
         } else {
-            adapters = Object.values(adapterLookup);
+            throw new Error(`Adapter '${adapter}' does not exists, possible options: ${Object.keys(adapterLookup).join(', ')}`);
         }
-
-        // Use ZStackAdapter by default
-        let adapter: AdapterImplementation = adapters[0];
-
-        if (!serialPortOptions.path) {
-            debug('No path provided, auto detecting path');
-            for (const candidate of adapters) {
-                const path = await candidate.autoDetectPath();
-                if (path) {
-                    debug(`Auto detected path '${path}' from adapter '${candidate.name}'`);
-                    serialPortOptions.path = path;
-                    adapter = candidate;
-                    break;
-                }
-            }
-
-            if (!serialPortOptions.path) {
-                throw new Error("No path provided and failed to auto detect path");
-            }
-        } else {
-            try {
-                // Determine adapter to use
-                for (const candidate of adapters) {
-                    if (await candidate.isValidPath(serialPortOptions.path)) {
-                        debug(`Path '${serialPortOptions.path}' is valid for '${candidate.name}'`);
-                        adapter = candidate;
-                        break;
-                    }
-                }
-            } catch (error) {
-                debug(`Failed to validate path: '${error}'`);
-            }
-        }
-
-        return new adapter(networkOptions, serialPortOptions, backupPath, adapterOptions, logger);
     }
 
     public abstract start(): Promise<TsType.StartResult>;
 
     public abstract stop(): Promise<void>;
 
-    public abstract getCoordinator(): Promise<TsType.Coordinator>;
+    public abstract getCoordinatorIEEE(): Promise<string>;
 
     public abstract getCoordinatorVersion(): Promise<TsType.CoordinatorVersion>;
 
@@ -110,59 +93,69 @@ abstract class Adapter extends events.EventEmitter {
 
     public abstract supportsBackup(): Promise<boolean>;
 
-    public abstract backup(): Promise<Models.Backup>;
+    public abstract backup(ieeeAddressesInDatabase: string[]): Promise<Models.Backup>;
 
     public abstract getNetworkParameters(): Promise<TsType.NetworkParameters>;
 
-    public abstract setTransmitPower(value: number): Promise<void>;
+    public abstract addInstallCode(ieeeAddress: string, key: Buffer, hashed: boolean): Promise<void>;
 
     public abstract waitFor(
-        networkAddress: number, endpoint: number, frameType: FrameType, direction: Direction,
-        transactionSequenceNumber: number, clusterID: number, commandIdentifier: number, timeout: number,
-    ): {promise: Promise<ZclDataPayload>; cancel: () => void};
+        networkAddress: number | undefined,
+        endpoint: number,
+        frameType: Zcl.FrameType,
+        direction: Zcl.Direction,
+        transactionSequenceNumber: number | undefined,
+        clusterID: number,
+        commandIdentifier: number,
+        timeout: number,
+    ): {promise: Promise<AdapterEvents.ZclPayload>; cancel: () => void};
 
     /**
      * ZDO
      */
 
-    public abstract permitJoin(seconds: number, networkAddress: number): Promise<void>;
-
-    public abstract lqi(networkAddress: number): Promise<TsType.LQI>;
-
-    public abstract routingTable(networkAddress: number): Promise<TsType.RoutingTable>;
-
-    public abstract nodeDescriptor(networkAddress: number): Promise<TsType.NodeDescriptor>;
-
-    public abstract activeEndpoints(networkAddress: number): Promise<TsType.ActiveEndpoints>;
-
-    public abstract simpleDescriptor(networkAddress: number, endpointID: number): Promise<TsType.SimpleDescriptor>;
-
-    public abstract bind(
-        destinationNetworkAddress: number, sourceIeeeAddress: string, sourceEndpoint: number,
-        clusterID: number, destinationAddressOrGroup: string | number, type: 'endpoint' | 'group',
-        destinationEndpoint?: number
+    public abstract sendZdo(
+        ieeeAddress: string,
+        networkAddress: number,
+        clusterId: Zdo.ClusterId,
+        payload: Buffer,
+        disableResponse: true,
     ): Promise<void>;
+    public abstract sendZdo<K extends keyof ZdoTypes.RequestToResponseMap>(
+        ieeeAddress: string,
+        networkAddress: number,
+        clusterId: K,
+        payload: Buffer,
+        disableResponse: false,
+    ): Promise<ZdoTypes.RequestToResponseMap[K]>;
+    public abstract sendZdo<K extends keyof ZdoTypes.RequestToResponseMap>(
+        ieeeAddress: string,
+        networkAddress: number,
+        clusterId: K,
+        payload: Buffer,
+        disableResponse: boolean,
+    ): Promise<ZdoTypes.RequestToResponseMap[K] | void>;
 
-    public abstract unbind(
-        destinationNetworkAddress: number, sourceIeeeAddress: string, sourceEndpoint: number,
-        clusterID: number, destinationAddressOrGroup: string | number, type: 'endpoint' | 'group',
-        destinationEndpoint: number
-    ): Promise<void>;
-
-    public abstract removeDevice(networkAddress: number, ieeeAddr: string): Promise<void>;
+    public abstract permitJoin(seconds: number, networkAddress?: number): Promise<void>;
 
     /**
      * ZCL
      */
 
     public abstract sendZclFrameToEndpoint(
-        ieeeAddr: string, networkAddress: number, endpoint: number, zclFrame: ZclFrame, timeout: number,
-        disableResponse: boolean, disableRecovery: boolean, sourceEndpoint?: number,
-    ): Promise<ZclDataPayload>;
+        ieeeAddr: string,
+        networkAddress: number,
+        endpoint: number,
+        zclFrame: Zcl.Frame,
+        timeout: number,
+        disableResponse: boolean,
+        disableRecovery: boolean,
+        sourceEndpoint?: number,
+    ): Promise<AdapterEvents.ZclPayload | void>;
 
-    public abstract sendZclFrameToGroup(groupID: number, zclFrame: ZclFrame, sourceEndpoint?: number): Promise<void>;
+    public abstract sendZclFrameToGroup(groupID: number, zclFrame: Zcl.Frame, sourceEndpoint?: number): Promise<void>;
 
-    public abstract sendZclFrameToAll(endpoint: number, zclFrame: ZclFrame, sourceEndpoint: number): Promise<void>;
+    public abstract sendZclFrameToAll(endpoint: number, zclFrame: Zcl.Frame, sourceEndpoint: number, destination: BroadcastAddress): Promise<void>;
 
     /**
      * InterPAN
@@ -170,14 +163,11 @@ abstract class Adapter extends events.EventEmitter {
 
     public abstract setChannelInterPAN(channel: number): Promise<void>;
 
-    public abstract sendZclFrameInterPANToIeeeAddr(zclFrame: ZclFrame, ieeeAddress: string): Promise<void>;
+    public abstract sendZclFrameInterPANToIeeeAddr(zclFrame: Zcl.Frame, ieeeAddress: string): Promise<void>;
 
-    public abstract sendZclFrameInterPANBroadcast(
-        zclFrame: ZclFrame, timeout: number
-    ): Promise<ZclDataPayload>;
+    public abstract sendZclFrameInterPANBroadcast(zclFrame: Zcl.Frame, timeout: number): Promise<AdapterEvents.ZclPayload>;
 
     public abstract restoreChannelInterPAN(): Promise<void>;
-
 }
 
 export default Adapter;

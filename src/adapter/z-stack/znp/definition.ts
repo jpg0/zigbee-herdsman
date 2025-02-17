@@ -1,36 +1,41 @@
-import {Subsystem, Type as CommandType} from '../unpi/constants';
+import {ClusterId as ZdoClusterId} from '../../../zspec/zdo';
+import {Type as CommandType, Subsystem} from '../unpi/constants';
 import ParameterType from './parameterType';
 import {MtCmd} from './tstype';
 
 const Definition: {
-    [s: number]: MtCmd[];
-}
-= {
+    [Subsystem.SYS]: MtCmd[];
+    [Subsystem.MAC]: MtCmd[];
+    [Subsystem.AF]: MtCmd[];
+    [Subsystem.ZDO]: MtCmd[];
+    [Subsystem.SAPI]: MtCmd[];
+    [Subsystem.UTIL]: MtCmd[];
+    [Subsystem.DEBUG]: MtCmd[];
+    [Subsystem.APP]: MtCmd[];
+    [Subsystem.APP_CNF]: MtCmd[];
+    [Subsystem.GREENPOWER]: MtCmd[];
+    [Subsystem.RESERVED]: MtCmd[];
+    [Subsystem.NWK]: MtCmd[];
+} = {
     [Subsystem.SYS]: [
         {
             name: 'resetReq',
             ID: 0,
             type: CommandType.AREQ,
-            request: [
-                {name: 'type', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'type', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'ping',
             ID: 1,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'capabilities', parameterType: ParameterType.UINT16},
-            ],
+            request: [],
+            response: [{name: 'capabilities', parameterType: ParameterType.UINT16}],
         },
         {
             name: 'version',
             ID: 2,
             type: CommandType.SREQ,
-            request: [
-            ],
+            request: [],
             response: [
                 {name: 'transportrev', parameterType: ParameterType.UINT8},
                 {name: 'product', parameterType: ParameterType.UINT8},
@@ -44,22 +49,15 @@ const Definition: {
             name: 'setExtAddr',
             ID: 3,
             type: CommandType.SREQ,
-            request: [
-                {name: 'extaddress', parameterType: ParameterType.IEEEADDR},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'extaddress', parameterType: ParameterType.IEEEADDR}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'getExtAddr',
             ID: 4,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'extaddress', parameterType: ParameterType.IEEEADDR},
-            ],
+            request: [],
+            response: [{name: 'extaddress', parameterType: ParameterType.IEEEADDR}],
         },
         {
             name: 'ramRead',
@@ -84,9 +82,7 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'osalNvItemInit',
@@ -98,9 +94,7 @@ const Definition: {
                 {name: 'initlen', parameterType: ParameterType.UINT8},
                 {name: 'initvalue', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'osalNvRead',
@@ -126,9 +120,7 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'osalStartTimer',
@@ -138,30 +130,21 @@ const Definition: {
                 {name: 'id', parameterType: ParameterType.UINT8},
                 {name: 'timeout', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'osalStopTimer',
             ID: 11,
             type: CommandType.SREQ,
-            request: [
-                {name: 'id', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'id', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'random',
             ID: 12,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'value', parameterType: ParameterType.UINT16},
-            ],
+            request: [],
+            response: [{name: 'value', parameterType: ParameterType.UINT16}],
         },
         {
             name: 'adcRead',
@@ -171,9 +154,7 @@ const Definition: {
                 {name: 'channel', parameterType: ParameterType.UINT8},
                 {name: 'resolution', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'value', parameterType: ParameterType.UINT16},
-            ],
+            response: [{name: 'value', parameterType: ParameterType.UINT16}],
         },
         {
             name: 'gpio',
@@ -183,9 +164,7 @@ const Definition: {
                 {name: 'operation', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'value', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'value', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'stackTune',
@@ -195,9 +174,7 @@ const Definition: {
                 {name: 'operation', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.INT8},
             ],
-            response: [
-                {name: 'value', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'value', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'setTime',
@@ -212,16 +189,13 @@ const Definition: {
                 {name: 'day', parameterType: ParameterType.UINT8},
                 {name: 'year', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'getTime',
             ID: 17,
             type: CommandType.SREQ,
-            request: [
-            ],
+            request: [],
             response: [
                 {name: 'utc', parameterType: ParameterType.UINT32},
                 {name: 'hour', parameterType: ParameterType.UINT8},
@@ -240,31 +214,21 @@ const Definition: {
                 {name: 'id', parameterType: ParameterType.UINT16},
                 {name: 'len', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'osalNvLength',
             ID: 19,
             type: CommandType.SREQ,
-            request: [
-                {name: 'id', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'length', parameterType: ParameterType.UINT16},
-            ],
+            request: [{name: 'id', parameterType: ParameterType.UINT16}],
+            response: [{name: 'length', parameterType: ParameterType.UINT16}],
         },
         {
             name: 'setTxPower',
             ID: 20,
             type: CommandType.SREQ,
-            request: [
-                {name: 'level', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'txpower', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'level', parameterType: ParameterType.UINT8}],
+            response: [{name: 'txpower', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'jammerParameters',
@@ -275,72 +239,49 @@ const Definition: {
                 {name: 'jmrhinoiselvl', parameterType: ParameterType.UINT8},
                 {name: 'jmrdetectperiod', parameterType: ParameterType.UINT32},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'snifferParameters',
             ID: 22,
             type: CommandType.SREQ,
-            request: [
-                {name: 'param', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'param', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'zdiagsInitStats',
             ID: 23,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'zdiagsClearStats',
             ID: 24,
             type: CommandType.SREQ,
-            request: [
-                {name: 'clearnv', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'sysclock', parameterType: ParameterType.UINT32},
-            ],
+            request: [{name: 'clearnv', parameterType: ParameterType.UINT8}],
+            response: [{name: 'sysclock', parameterType: ParameterType.UINT32}],
         },
         {
             name: 'zdiagsGetStats',
             ID: 25,
             type: CommandType.SREQ,
-            request: [
-                {name: 'attributeid', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'attributevalue', parameterType: ParameterType.UINT32},
-            ],
+            request: [{name: 'attributeid', parameterType: ParameterType.UINT16}],
+            response: [{name: 'attributevalue', parameterType: ParameterType.UINT32}],
         },
         {
             name: 'zdiagsRestoreStatsNv',
             ID: 26,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'zdiagsSaveStatsToNv',
             ID: 27,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'sysclock', parameterType: ParameterType.UINT32},
-            ],
+            request: [],
+            response: [{name: 'sysclock', parameterType: ParameterType.UINT32}],
         },
         {
             name: 'osalNvReadExt',
@@ -366,9 +307,7 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT16},
                 {name: 'value', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nvCreate',
@@ -380,9 +319,7 @@ const Definition: {
                 {name: 'subid', parameterType: ParameterType.UINT16},
                 {name: 'len', parameterType: ParameterType.UINT32},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nvDelete',
@@ -393,9 +330,7 @@ const Definition: {
                 {name: 'itemid', parameterType: ParameterType.UINT16},
                 {name: 'subid', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nvLength',
@@ -406,9 +341,7 @@ const Definition: {
                 {name: 'itemid', parameterType: ParameterType.UINT16},
                 {name: 'subid', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'len', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'len', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nvRead',
@@ -439,9 +372,7 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nvUpdate',
@@ -454,20 +385,14 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nvCompact',
             ID: 54,
             type: CommandType.SREQ,
-            request: [
-                {name: 'threshold', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'threshold', parameterType: ParameterType.UINT16}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'resetInd',
@@ -486,17 +411,13 @@ const Definition: {
             name: 'osalTimerExpired',
             ID: 129,
             type: CommandType.AREQ,
-            request: [
-                {name: 'id', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'id', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'jammerInd',
             ID: 130,
             type: CommandType.AREQ,
-            request: [
-                {name: 'jammerind', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'jammerind', parameterType: ParameterType.UINT8}],
         },
     ],
     [Subsystem.MAC]: [
@@ -504,22 +425,15 @@ const Definition: {
             name: 'resetReq',
             ID: 1,
             type: CommandType.SREQ,
-            request: [
-                {name: 'setdefault', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'setdefault', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'init',
             ID: 2,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'startReq',
@@ -544,9 +458,7 @@ const Definition: {
                 {name: 'beaconkeyidmode', parameterType: ParameterType.UINT8},
                 {name: 'beaconkeyindex', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'syncReq',
@@ -557,9 +469,7 @@ const Definition: {
                 {name: 'channelpage', parameterType: ParameterType.UINT8},
                 {name: 'trackbeacon', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'dataReq',
@@ -581,9 +491,7 @@ const Definition: {
                 {name: 'msdulength', parameterType: ParameterType.UINT8},
                 {name: 'msdu', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'associateReq',
@@ -601,9 +509,7 @@ const Definition: {
                 {name: 'keyidmode', parameterType: ParameterType.UINT8},
                 {name: 'keyindex', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'disassociateReq',
@@ -620,17 +526,13 @@ const Definition: {
                 {name: 'keyidmode', parameterType: ParameterType.UINT8},
                 {name: 'keyindex', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'getReq',
             ID: 8,
             type: CommandType.SREQ,
-            request: [
-                {name: 'attribute', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'attribute', parameterType: ParameterType.UINT8}],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'data', parameterType: ParameterType.BUFFER16},
@@ -644,9 +546,7 @@ const Definition: {
                 {name: 'attribute', parameterType: ParameterType.UINT8},
                 {name: 'attributevalue', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'scanReq',
@@ -663,9 +563,7 @@ const Definition: {
                 {name: 'keyidmode', parameterType: ParameterType.UINT8},
                 {name: 'keyindex', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'pollReq',
@@ -680,31 +578,21 @@ const Definition: {
                 {name: 'keyidmode', parameterType: ParameterType.UINT8},
                 {name: 'keyindex', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'purgeReq',
             ID: 14,
             type: CommandType.SREQ,
-            request: [
-                {name: 'msduhandle', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'msduhandle', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'setRxGainReq',
             ID: 15,
             type: CommandType.SREQ,
-            request: [
-                {name: 'mode', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'mode', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'securityGetReq',
@@ -715,9 +603,7 @@ const Definition: {
                 {name: 'index1', parameterType: ParameterType.UINT8},
                 {name: 'index2', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'securitySetReq',
@@ -727,9 +613,7 @@ const Definition: {
                 {name: 'attribute', parameterType: ParameterType.UINT8},
                 {name: 'attributevalue', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'associateRsp',
@@ -740,9 +624,7 @@ const Definition: {
                 {name: 'assocshortaddress', parameterType: ParameterType.UINT16},
                 {name: 'assocstatus', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'orphanRsp',
@@ -753,9 +635,7 @@ const Definition: {
                 {name: 'assocshortaddress', parameterType: ParameterType.UINT16},
                 {name: 'associatedmember', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'syncLossInd',
@@ -899,9 +779,7 @@ const Definition: {
             name: 'pollCnf',
             ID: 139,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'scanCnf',
@@ -940,17 +818,13 @@ const Definition: {
             name: 'startCnf',
             ID: 142,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'rxEnableCnf',
             ID: 143,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'purgeCnf',
@@ -978,9 +852,7 @@ const Definition: {
                 {name: 'appnumoutclusters', parameterType: ParameterType.UINT8},
                 {name: 'appoutclusterlist', parameterType: ParameterType.LIST_UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'dataRequest',
@@ -997,9 +869,7 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'data', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'dataRequestExt',
@@ -1018,9 +888,7 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT16},
                 {name: 'data', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'dataRequestSrcRtg',
@@ -1039,20 +907,14 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'data', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'delete',
             ID: 4,
             type: CommandType.SREQ,
-            request: [
-                {name: 'endpoint', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'endpoint', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'interPanCtl',
@@ -1062,9 +924,7 @@ const Definition: {
                 {name: 'cmd', parameterType: ParameterType.UINT8},
                 {name: 'data', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'dataStore',
@@ -1075,9 +935,7 @@ const Definition: {
                 {name: 'length', parameterType: ParameterType.UINT8},
                 {name: 'data', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'dataRetrieve',
@@ -1103,17 +961,13 @@ const Definition: {
                 {name: 'framedelay', parameterType: ParameterType.UINT8},
                 {name: 'windowsize', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'apsfConfigGet',
             ID: 20,
             type: CommandType.SREQ,
-            request: [
-                {name: 'endpoint', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'endpoint', parameterType: ParameterType.UINT8}],
             response: [
                 {name: 'framedelay', parameterType: ParameterType.UINT8},
                 {name: 'windowsize', parameterType: ParameterType.UINT8},
@@ -1188,93 +1042,86 @@ const Definition: {
             name: 'nwkAddrReq',
             ID: 0,
             type: CommandType.SREQ,
-            request: [
-                {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
-                {name: 'reqtype', parameterType: ParameterType.UINT8},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.NETWORK_ADDRESS_REQUEST,
+            // request: [
+            //     {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
+            //     {name: 'reqtype', parameterType: ParameterType.UINT8},
+            //     {name: 'startindex', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'ieeeAddrReq',
             ID: 1,
             type: CommandType.SREQ,
-            request: [
-                {name: 'shortaddr', parameterType: ParameterType.UINT16},
-                {name: 'reqtype', parameterType: ParameterType.UINT8},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.IEEE_ADDRESS_REQUEST,
+            // request: [
+            //     {name: 'shortaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'reqtype', parameterType: ParameterType.UINT8},
+            //     {name: 'startindex', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nodeDescReq',
             ID: 2,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.NODE_DESCRIPTOR_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'powerDescReq',
             ID: 3,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.POWER_DESCRIPTOR_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'simpleDescReq',
             ID: 4,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
-                {name: 'endpoint', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.SIMPLE_DESCRIPTOR_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
+            //     {name: 'endpoint', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'activeEpReq',
             ID: 5,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.ACTIVE_ENDPOINTS_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'matchDescReq',
             ID: 6,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
-                {name: 'profileid', parameterType: ParameterType.UINT16},
-                {name: 'numinclusters', parameterType: ParameterType.UINT8},
-                {name: 'inclusterlist', parameterType: ParameterType.LIST_UINT16},
-                {name: 'numoutclusters', parameterType: ParameterType.UINT8},
-                {name: 'outclusterlist', parameterType: ParameterType.LIST_UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.MATCH_DESCRIPTORS_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
+            //     {name: 'profileid', parameterType: ParameterType.UINT16},
+            //     {name: 'numinclusters', parameterType: ParameterType.UINT8},
+            //     {name: 'inclusterlist', parameterType: ParameterType.LIST_UINT16},
+            //     {name: 'numoutclusters', parameterType: ParameterType.UINT8},
+            //     {name: 'outclusterlist', parameterType: ParameterType.LIST_UINT16},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'complexDescReq',
@@ -1284,9 +1131,7 @@ const Definition: {
                 {name: 'dstaddr', parameterType: ParameterType.UINT16},
                 {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'userDescReq',
@@ -1296,9 +1141,7 @@ const Definition: {
                 {name: 'dstaddr', parameterType: ParameterType.UINT16},
                 {name: 'nwkaddrofinterest', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'endDeviceAnnce',
@@ -1309,9 +1152,7 @@ const Definition: {
                 {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
                 {name: 'capability', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'userDescSet',
@@ -1323,20 +1164,15 @@ const Definition: {
                 {name: 'descriptor_len', parameterType: ParameterType.UINT8},
                 {name: 'userdescriptor', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'serverDiscReq',
             ID: 12,
             type: CommandType.SREQ,
-            request: [
-                {name: 'servermask', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.SYSTEM_SERVER_DISCOVERY_REQUEST,
+            // request: [{name: 'servermask', parameterType: ParameterType.UINT16}],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'endDeviceBindReq',
@@ -1353,43 +1189,39 @@ const Definition: {
                 {name: 'numoutclusters', parameterType: ParameterType.UINT8},
                 {name: 'outclusterlist', parameterType: ParameterType.LIST_UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'bindReq',
             ID: 33,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'srcaddr', parameterType: ParameterType.IEEEADDR},
-                {name: 'srcendpoint', parameterType: ParameterType.UINT8},
-                {name: 'clusterid', parameterType: ParameterType.UINT16},
-                {name: 'dstaddrmode', parameterType: ParameterType.UINT8},
-                {name: 'dstaddress', parameterType: ParameterType.IEEEADDR},
-                {name: 'dstendpoint', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.BIND_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'srcaddr', parameterType: ParameterType.IEEEADDR},
+            //     {name: 'srcendpoint', parameterType: ParameterType.UINT8},
+            //     {name: 'clusterid', parameterType: ParameterType.UINT16},
+            //     {name: 'dstaddrmode', parameterType: ParameterType.UINT8},
+            //     {name: 'dstaddress', parameterType: ParameterType.IEEEADDR},
+            //     {name: 'dstendpoint', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'unbindReq',
             ID: 34,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'srcaddr', parameterType: ParameterType.IEEEADDR},
-                {name: 'srcendpoint', parameterType: ParameterType.UINT8},
-                {name: 'clusterid', parameterType: ParameterType.UINT16},
-                {name: 'dstaddrmode', parameterType: ParameterType.UINT8},
-                {name: 'dstaddress', parameterType: ParameterType.IEEEADDR},
-                {name: 'dstendpoint', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.UNBIND_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'srcaddr', parameterType: ParameterType.IEEEADDR},
+            //     {name: 'srcendpoint', parameterType: ParameterType.UINT8},
+            //     {name: 'clusterid', parameterType: ParameterType.UINT16},
+            //     {name: 'dstaddrmode', parameterType: ParameterType.UINT8},
+            //     {name: 'dstaddress', parameterType: ParameterType.IEEEADDR},
+            //     {name: 'dstendpoint', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'setLinkKey',
@@ -1400,28 +1232,20 @@ const Definition: {
                 {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
                 {name: 'linkkey', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'removeLinkKey',
             ID: 36,
             type: CommandType.SREQ,
-            request: [
-                {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'getLinkKey',
             ID: 37,
             type: CommandType.SREQ,
-            request: [
-                {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
-            ],
+            request: [{name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR}],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
@@ -1436,9 +1260,7 @@ const Definition: {
                 {name: 'scanchannels', parameterType: ParameterType.UINT32},
                 {name: 'scanduration', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'joinReq',
@@ -1452,9 +1274,7 @@ const Definition: {
                 {name: 'parentdepth', parameterType: ParameterType.UINT8},
                 {name: 'stackprofile', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtNwkDiscReq',
@@ -1466,58 +1286,52 @@ const Definition: {
                 {name: 'scanduration', parameterType: ParameterType.UINT8},
                 {name: 'startindex', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtLqiReq',
             ID: 49,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.LQI_TABLE_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'startindex', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtRtgReq',
             ID: 50,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.ROUTING_TABLE_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'startindex', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtBindReq',
             ID: 51,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.BINDING_TABLE_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'startindex', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtLeaveReq',
             ID: 52,
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'deviceaddress', parameterType: ParameterType.IEEEADDR},
-                {name: 'removechildrenRejoin', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.LEAVE_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'deviceaddress', parameterType: ParameterType.IEEEADDR},
+            //     {name: 'removechildrenRejoin', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtDirectJoinReq',
@@ -1528,180 +1342,171 @@ const Definition: {
                 {name: 'deviceaddr', parameterType: ParameterType.IEEEADDR},
                 {name: 'capinfo', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtPermitJoinReq',
             ID: 54,
             type: CommandType.SREQ,
-            request: [
-                {name: 'addrmode', parameterType: ParameterType.UINT8},
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'duration', parameterType: ParameterType.UINT8},
-                {name: 'tcsignificance', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.PERMIT_JOINING_REQUEST,
+            // request: [
+            //     {name: 'addrmode', parameterType: ParameterType.UINT8},
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'duration', parameterType: ParameterType.UINT8},
+            //     {name: 'tcsignificance', parameterType: ParameterType.UINT8},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'mgmtNwkUpdateReq',
-            ID: 55,
+            ID: 55, // the spec says 0x38, but TI used 0x37 see https://github.com/Koenkk/zigbee-herdsman/issues/1237
             type: CommandType.SREQ,
-            request: [
-                {name: 'dstaddr', parameterType: ParameterType.UINT16},
-                {name: 'dstaddrmode', parameterType: ParameterType.UINT8},
-                {name: 'channelmask', parameterType: ParameterType.UINT32},
-                {name: 'scanduration', parameterType: ParameterType.UINT8},
-                {name: 'scancount', parameterType: ParameterType.UINT8},
-                {name: 'nwkmanageraddr', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.NWK_UPDATE_REQUEST,
+            // request: [
+            //     {name: 'dstaddr', parameterType: ParameterType.UINT16},
+            //     {name: 'dstaddrmode', parameterType: ParameterType.UINT8},
+            //     {name: 'channelmask', parameterType: ParameterType.UINT32},
+            //     {name: 'scanduration', parameterType: ParameterType.UINT8},
+            //     // TODO: below two have various combinations of present/not present depending on scanduration
+            //     {name: 'scancount', parameterType: ParameterType.UINT8},
+            //     {name: 'nwkmanageraddr', parameterType: ParameterType.UINT16},
+            // ],
+            // response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'msgCbRegister',
             ID: 62,
             type: CommandType.SREQ,
-            request: [
-                {name: 'clusterid', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'clusterid', parameterType: ParameterType.UINT16}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'msgCbRemove',
             ID: 63,
             type: CommandType.SREQ,
-            request: [
-                {name: 'clusterid', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'clusterid', parameterType: ParameterType.UINT16}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'startupFromApp',
             ID: 64,
             type: CommandType.SREQ,
-            request: [
-                {name: 'startdelay', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'startdelay', parameterType: ParameterType.UINT16}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'autoFindDestination',
             ID: 65,
             type: CommandType.AREQ,
-            request: [
-                {name: 'endpoint', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'endpoint', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nwkAddrRsp',
             ID: 128,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-                {name: 'numassocdev', parameterType: ParameterType.UINT8},
-                {name: 'assocdevlist', parameterType: ParameterType.LIST_ASSOC_DEV},
-            ],
+            zdoClusterId: ZdoClusterId.NETWORK_ADDRESS_RESPONSE,
+            // request: [
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // Parse the ieeeaddr as it is needed for ZNP waitFor (see zStackAdapter.requestNetworkAddress())
+            // {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'startindex', parameterType: ParameterType.UINT8},
+            // {name: 'numassocdev', parameterType: ParameterType.UINT8},
+            // {name: 'assocdevlist', parameterType: ParameterType.LIST_ASSOC_DEV},
+            // ],
         },
         {
             name: 'ieeeAddrRsp',
             ID: 129,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-                {name: 'numassocdev', parameterType: ParameterType.UINT8},
-                {name: 'assocdevlist', parameterType: ParameterType.LIST_ASSOC_DEV},
-            ],
+            zdoClusterId: ZdoClusterId.IEEE_ADDRESS_RESPONSE,
+            // request: [
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'startindex', parameterType: ParameterType.UINT8},
+            // {name: 'numassocdev', parameterType: ParameterType.UINT8},
+            // {name: 'assocdevlist', parameterType: ParameterType.LIST_ASSOC_DEV},
+            // ],
         },
         {
             name: 'nodeDescRsp',
             ID: 130,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'logicaltype_cmplxdescavai_userdescavai', parameterType: ParameterType.UINT8},
-                {name: 'apsflags_freqband', parameterType: ParameterType.UINT8},
-                {name: 'maccapflags', parameterType: ParameterType.UINT8},
-                {name: 'manufacturercode', parameterType: ParameterType.UINT16},
-                {name: 'maxbuffersize', parameterType: ParameterType.UINT8},
-                {name: 'maxintransfersize', parameterType: ParameterType.UINT16},
-                {name: 'servermask', parameterType: ParameterType.UINT16},
-                {name: 'maxouttransfersize', parameterType: ParameterType.UINT16},
-                {name: 'descriptorcap', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.NODE_DESCRIPTOR_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'logicaltype_cmplxdescavai_userdescavai', parameterType: ParameterType.UINT8},
+            // {name: 'apsflags_freqband', parameterType: ParameterType.UINT8},
+            // {name: 'maccapflags', parameterType: ParameterType.UINT8},
+            // {name: 'manufacturercode', parameterType: ParameterType.UINT16},
+            // {name: 'maxbuffersize', parameterType: ParameterType.UINT8},
+            // {name: 'maxintransfersize', parameterType: ParameterType.UINT16},
+            // {name: 'servermask', parameterType: ParameterType.UINT16},
+            // {name: 'maxouttransfersize', parameterType: ParameterType.UINT16},
+            // {name: 'descriptorcap', parameterType: ParameterType.UINT8},
+            // ],
         },
         {
             name: 'powerDescRsp',
             ID: 131,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'currentpowermode_avaipowersrc', parameterType: ParameterType.UINT8},
-                {name: 'currentpowersrc_currentpowersrclevel', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.POWER_DESCRIPTOR_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'currentpowermode_avaipowersrc', parameterType: ParameterType.UINT8},
+            // {name: 'currentpowersrc_currentpowersrclevel', parameterType: ParameterType.UINT8},
+            // ],
         },
         {
             name: 'simpleDescRsp',
             ID: 132,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'len', parameterType: ParameterType.UINT8},
-                {name: 'endpoint', parameterType: ParameterType.UINT8},
-                {name: 'profileid', parameterType: ParameterType.UINT16},
-                {name: 'deviceid', parameterType: ParameterType.UINT16},
-                {name: 'deviceversion', parameterType: ParameterType.UINT8},
-                {name: 'numinclusters', parameterType: ParameterType.UINT8},
-                {name: 'inclusterlist', parameterType: ParameterType.LIST_UINT16},
-                {name: 'numoutclusters', parameterType: ParameterType.UINT8},
-                {name: 'outclusterlist', parameterType: ParameterType.LIST_UINT16},
-            ],
+            zdoClusterId: ZdoClusterId.SIMPLE_DESCRIPTOR_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'len', parameterType: ParameterType.UINT8},
+            // {name: 'endpoint', parameterType: ParameterType.UINT8},
+            // {name: 'profileid', parameterType: ParameterType.UINT16},
+            // {name: 'deviceid', parameterType: ParameterType.UINT16},
+            // {name: 'deviceversion', parameterType: ParameterType.UINT8},
+            // {name: 'numinclusters', parameterType: ParameterType.UINT8},
+            // {name: 'inclusterlist', parameterType: ParameterType.LIST_UINT16},
+            // {name: 'numoutclusters', parameterType: ParameterType.UINT8},
+            // {name: 'outclusterlist', parameterType: ParameterType.LIST_UINT16},
+            // ],
         },
         {
             name: 'activeEpRsp',
             ID: 133,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'activeepcount', parameterType: ParameterType.UINT8},
-                {name: 'activeeplist', parameterType: ParameterType.LIST_UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.ACTIVE_ENDPOINTS_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'activeepcount', parameterType: ParameterType.UINT8},
+            // {name: 'activeeplist', parameterType: ParameterType.LIST_UINT8},
+            // ],
         },
         {
             name: 'matchDescRsp',
             ID: 134,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'matchlength', parameterType: ParameterType.UINT8},
-                {name: 'matchlist', parameterType: ParameterType.BUFFER},
-            ],
+            zdoClusterId: ZdoClusterId.MATCH_DESCRIPTORS_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'matchlength', parameterType: ParameterType.UINT8},
+            // {name: 'matchlist', parameterType: ParameterType.BUFFER},
+            // ],
         },
         {
             name: 'complexDescRsp',
@@ -1741,11 +1546,19 @@ const Definition: {
             name: 'serverDiscRsp',
             ID: 138,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'servermask', parameterType: ParameterType.UINT16},
-            ],
+            zdoClusterId: ZdoClusterId.SYSTEM_SERVER_DISCOVERY_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'servermask', parameterType: ParameterType.UINT16},
+            // ],
+        },
+        {
+            // https://github.com/Koenkk/zigbee2mqtt/issues/3363
+            name: 'unknown',
+            ID: 159,
+            type: CommandType.AREQ,
+            request: [],
         },
         {
             name: 'endDeviceBindRsp',
@@ -1760,19 +1573,21 @@ const Definition: {
             name: 'bindRsp',
             ID: 161,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.BIND_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // ],
         },
         {
             name: 'unbindRsp',
             ID: 162,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.UNBIND_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // ],
         },
         {
             name: 'mgmtNwkDiscRsp',
@@ -1791,49 +1606,53 @@ const Definition: {
             name: 'mgmtLqiRsp',
             ID: 177,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'neighbortableentries', parameterType: ParameterType.UINT8},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-                {name: 'neighborlqilistcount', parameterType: ParameterType.UINT8},
-                {name: 'neighborlqilist', parameterType: ParameterType.LIST_NEIGHBOR_LQI},
-            ],
+            zdoClusterId: ZdoClusterId.LQI_TABLE_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'neighbortableentries', parameterType: ParameterType.UINT8},
+            // {name: 'startindex', parameterType: ParameterType.UINT8},
+            // {name: 'neighborlqilistcount', parameterType: ParameterType.UINT8},
+            // {name: 'neighborlqilist', parameterType: ParameterType.LIST_NEIGHBOR_LQI},
+            // ],
         },
         {
             name: 'mgmtRtgRsp',
             ID: 178,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'routingtableentries', parameterType: ParameterType.UINT8},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-                {name: 'routingtablelistcount', parameterType: ParameterType.UINT8},
-                {name: 'routingtablelist', parameterType: ParameterType.LIST_ROUTING_TABLE},
-            ],
+            zdoClusterId: ZdoClusterId.ROUTING_TABLE_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'routingtableentries', parameterType: ParameterType.UINT8},
+            // {name: 'startindex', parameterType: ParameterType.UINT8},
+            // {name: 'routingtablelistcount', parameterType: ParameterType.UINT8},
+            // {name: 'routingtablelist', parameterType: ParameterType.LIST_ROUTING_TABLE},
+            // ],
         },
         {
             name: 'mgmtBindRsp',
             ID: 179,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'bindingtableentries', parameterType: ParameterType.UINT8},
-                {name: 'startindex', parameterType: ParameterType.UINT8},
-                {name: 'bindingtablelistcount', parameterType: ParameterType.UINT8},
-                {name: 'bindingtablelist', parameterType: ParameterType.LIST_BIND_TABLE},
-            ],
+            zdoClusterId: ZdoClusterId.BINDING_TABLE_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'bindingtableentries', parameterType: ParameterType.UINT8},
+            // {name: 'startindex', parameterType: ParameterType.UINT8},
+            // {name: 'bindingtablelistcount', parameterType: ParameterType.UINT8},
+            // {name: 'bindingtablelist', parameterType: ParameterType.LIST_BIND_TABLE},
+            // ],
         },
         {
             name: 'mgmtLeaveRsp',
             ID: 180,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.LEAVE_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // ],
         },
         {
             name: 'mgmtDirectJoinRsp',
@@ -1848,43 +1667,44 @@ const Definition: {
             name: 'mgmtPermitJoinRsp',
             ID: 182,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.PERMIT_JOINING_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // ],
         },
         {
             name: 'mgmtNwkUpdateNotify',
             ID: 184,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'status', parameterType: ParameterType.UINT8},
-                {name: 'scannedchannels', parameterType: ParameterType.UINT32},
-                {name: 'totaltrans', parameterType: ParameterType.UINT16},
-                {name: 'transfails', parameterType: ParameterType.UINT16},
-                {name: 'energylength', parameterType: ParameterType.UINT8},
-                {name: 'energyvalues', parameterType: ParameterType.LIST_UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.NWK_UPDATE_RESPONSE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'status', parameterType: ParameterType.UINT8},
+            // {name: 'scannedchannels', parameterType: ParameterType.UINT32},
+            // {name: 'totaltrans', parameterType: ParameterType.UINT16},
+            // {name: 'transfails', parameterType: ParameterType.UINT16},
+            // {name: 'energylength', parameterType: ParameterType.UINT8},
+            // {name: 'energyvalues', parameterType: ParameterType.LIST_UINT8},
+            // ],
         },
         {
             name: 'stateChangeInd',
             ID: 192,
             type: CommandType.AREQ,
-            request: [
-                {name: 'state', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'state', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'endDeviceAnnceInd',
             ID: 193,
             type: CommandType.AREQ,
-            request: [
-                {name: 'srcaddr', parameterType: ParameterType.UINT16},
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-                {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
-                {name: 'capabilities', parameterType: ParameterType.UINT8},
-            ],
+            zdoClusterId: ZdoClusterId.END_DEVICE_ANNOUNCE,
+            // request: [
+            // {name: 'srcaddr', parameterType: ParameterType.UINT16},
+            // {name: 'nwkaddr', parameterType: ParameterType.UINT16},
+            // {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
+            // {name: 'capabilities', parameterType: ParameterType.UINT8},
+            // ],
         },
         {
             name: 'matchDescRspSent',
@@ -1940,9 +1760,7 @@ const Definition: {
             name: 'nwkDiscoveryCnf',
             ID: 199,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'concentratorIndCb',
@@ -1974,9 +1792,7 @@ const Definition: {
                 {name: 'backoffduration', parameterType: ParameterType.UINT32},
                 {name: 'scanduration', parameterType: ParameterType.UINT32},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'msgCbIncoming',
@@ -2000,9 +1816,7 @@ const Definition: {
                 {name: 'parentaddr', parameterType: ParameterType.UINT16},
                 {name: 'reqrimeout', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'sendData',
@@ -2015,9 +1829,7 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'buf', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'nwkAddrOfInterestReq',
@@ -2028,9 +1840,7 @@ const Definition: {
                 {name: 'nwkaddr', parameterType: ParameterType.UINT16},
                 {name: 'cmd', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'secAddLinkKey',
@@ -2041,17 +1851,13 @@ const Definition: {
                 {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
                 {name: 'linkkey', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'secEntryLookupExt',
             ID: 67,
             type: CommandType.SREQ,
-            request: [
-                {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
-            ],
+            request: [{name: 'extaddr', parameterType: ParameterType.IEEEADDR}],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'ami', parameterType: ParameterType.UINT16},
@@ -2063,12 +1869,8 @@ const Definition: {
             name: 'secDeviceRemove',
             ID: 68,
             type: CommandType.SREQ,
-            request: [
-                {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'extaddr', parameterType: ParameterType.IEEEADDR}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extRouteDisc',
@@ -2079,9 +1881,7 @@ const Definition: {
                 {name: 'options', parameterType: ParameterType.UINT8},
                 {name: 'radius', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extRouteCheck',
@@ -2092,9 +1892,7 @@ const Definition: {
                 {name: 'rtstatus', parameterType: ParameterType.UINT8},
                 {name: 'options', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extRemoveGroup',
@@ -2104,28 +1902,20 @@ const Definition: {
                 {name: 'endpoint', parameterType: ParameterType.UINT8},
                 {name: 'groupid', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extRemoveAllGroup',
             ID: 72,
             type: CommandType.SREQ,
-            request: [
-                {name: 'endpoint', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'endpoint', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extFindAllGroupsEndpoint',
             ID: 73,
             type: CommandType.SREQ,
-            request: [
-                {name: 'endpoint', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'endpoint', parameterType: ParameterType.UINT8}],
             response: [
                 {name: 'groups', parameterType: ParameterType.UINT8},
                 {name: 'grouplist', parameterType: ParameterType.LIST_UINT16},
@@ -2156,19 +1946,14 @@ const Definition: {
                 {name: 'namelen', parameterType: ParameterType.UINT8},
                 {name: 'groupname', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extCountAllGroups',
             ID: 76,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extRxIdle',
@@ -2178,9 +1963,7 @@ const Definition: {
                 {name: 'setflag', parameterType: ParameterType.UINT8},
                 {name: 'setvalue', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extUpdateNwkKey',
@@ -2191,9 +1974,7 @@ const Definition: {
                 {name: 'keyseqnum', parameterType: ParameterType.UINT8},
                 {name: 'key', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extSwitchNwkKey',
@@ -2203,16 +1984,13 @@ const Definition: {
                 {name: 'dstaddr', parameterType: ParameterType.UINT16},
                 {name: 'keyseqnum', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'extNwkInfo',
             ID: 80,
             type: CommandType.SREQ,
-            request: [
-            ],
+            request: [],
             response: [
                 {name: 'shortaddr', parameterType: ParameterType.UINT16},
                 {name: 'devstate', parameterType: ParameterType.UINT8},
@@ -2232,29 +2010,21 @@ const Definition: {
                 {name: 'nwkaddr', parameterType: ParameterType.UINT16},
                 {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'forceConcentratorChange',
             ID: 82,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-            ],
+            request: [],
+            response: [],
         },
         {
             name: 'extSetParams',
             ID: 83,
             type: CommandType.SREQ,
-            request: [
-                {name: 'usemulticast', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'usemulticast', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'tcDeviceInd',
@@ -2270,9 +2040,7 @@ const Definition: {
             name: 'permitJoinInd',
             ID: 203,
             type: CommandType.AREQ,
-            request: [
-                {name: 'duration', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'duration', parameterType: ParameterType.UINT8}],
         },
     ],
     [Subsystem.SAPI]: [
@@ -2280,17 +2048,14 @@ const Definition: {
             name: 'systemReset',
             ID: 9,
             type: CommandType.AREQ,
-            request: [
-            ],
+            request: [],
         },
         {
             name: 'startRequest',
             ID: 0,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-            ],
+            request: [],
+            response: [],
         },
         {
             name: 'bindDevice',
@@ -2301,18 +2066,14 @@ const Definition: {
                 {name: 'commandid', parameterType: ParameterType.UINT16},
                 {name: 'destination', parameterType: ParameterType.IEEEADDR},
             ],
-            response: [
-            ],
+            response: [],
         },
         {
             name: 'allowBind',
             ID: 2,
             type: CommandType.SREQ,
-            request: [
-                {name: 'timeout', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-            ],
+            request: [{name: 'timeout', parameterType: ParameterType.UINT8}],
+            response: [],
         },
         {
             name: 'sendDataRequest',
@@ -2327,16 +2088,13 @@ const Definition: {
                 {name: 'payloadlen', parameterType: ParameterType.UINT8},
                 {name: 'payloadvalue', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-            ],
+            response: [],
         },
         {
             name: 'readConfiguration',
             ID: 4,
             type: CommandType.SREQ,
-            request: [
-                {name: 'configid', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'configid', parameterType: ParameterType.UINT8}],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'configid', parameterType: ParameterType.UINT8},
@@ -2353,17 +2111,13 @@ const Definition: {
                 {name: 'len', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'getDeviceInfo',
             ID: 6,
             type: CommandType.SREQ,
-            request: [
-                {name: 'param', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'param', parameterType: ParameterType.UINT8}],
             response: [
                 {name: 'param', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.BUFFER8},
@@ -2373,11 +2127,8 @@ const Definition: {
             name: 'findDeviceRequest',
             ID: 7,
             type: CommandType.SREQ,
-            request: [
-                {name: 'searchKey', parameterType: ParameterType.IEEEADDR},
-            ],
-            response: [
-            ],
+            request: [{name: 'searchKey', parameterType: ParameterType.IEEEADDR}],
+            response: [],
         },
         {
             name: 'permitJoiningRequest',
@@ -2387,17 +2138,13 @@ const Definition: {
                 {name: 'destination', parameterType: ParameterType.UINT16},
                 {name: 'timeout', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'startConfirm',
             ID: 128,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'bindConfirm',
@@ -2412,9 +2159,7 @@ const Definition: {
             name: 'allowBindConfirm',
             ID: 130,
             type: CommandType.AREQ,
-            request: [
-                {name: 'source', parameterType: ParameterType.UINT16},
-            ],
+            request: [{name: 'source', parameterType: ParameterType.UINT16}],
         },
         {
             name: 'sendDataConfirm',
@@ -2452,8 +2197,7 @@ const Definition: {
             name: 'getDeviceInfo',
             ID: 0,
             type: CommandType.SREQ,
-            request: [
-            ],
+            request: [],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
@@ -2468,8 +2212,7 @@ const Definition: {
             name: 'getNvInfo',
             ID: 1,
             type: CommandType.SREQ,
-            request: [
-            ],
+            request: [],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
@@ -2483,45 +2226,29 @@ const Definition: {
             name: 'setPanid',
             ID: 2,
             type: CommandType.SREQ,
-            request: [
-                {name: 'panid', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'panid', parameterType: ParameterType.UINT16}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'setChannels',
             ID: 3,
             type: CommandType.SREQ,
-            request: [
-                {name: 'channels', parameterType: ParameterType.UINT32},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'channels', parameterType: ParameterType.UINT32}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'setSeclevel',
             ID: 4,
             type: CommandType.SREQ,
-            request: [
-                {name: 'securitylevel', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'securitylevel', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'setPrecfgkey',
             ID: 5,
             type: CommandType.SREQ,
-            request: [
-                {name: 'preconfigkey', parameterType: ParameterType.BUFFER},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'preconfigkey', parameterType: ParameterType.BUFFER}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'callbackSubCmd',
@@ -2531,9 +2258,7 @@ const Definition: {
                 {name: 'subsystemid', parameterType: ParameterType.UINT16},
                 {name: 'action', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'keyEvent',
@@ -2543,19 +2268,14 @@ const Definition: {
                 {name: 'keys', parameterType: ParameterType.UINT8},
                 {name: 'shift', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'timeAlive',
             ID: 9,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'seconds', parameterType: ParameterType.UINT32},
-            ],
+            request: [],
+            response: [{name: 'seconds', parameterType: ParameterType.UINT32}],
         },
         {
             name: 'ledControl',
@@ -2565,41 +2285,28 @@ const Definition: {
                 {name: 'ledid', parameterType: ParameterType.UINT8},
                 {name: 'mode', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'testLoopback',
             ID: 16,
             type: CommandType.SREQ,
-            request: [
-                {name: 'data', parameterType: ParameterType.BUFFER},
-            ],
-            response: [
-                {name: 'data', parameterType: ParameterType.BUFFER},
-            ],
+            request: [{name: 'data', parameterType: ParameterType.BUFFER}],
+            response: [{name: 'data', parameterType: ParameterType.BUFFER}],
         },
         {
             name: 'dataReq',
             ID: 17,
             type: CommandType.SREQ,
-            request: [
-                {name: 'securityuse', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'securityuse', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'srcMatchEnable',
             ID: 32,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'srcMatchAddEntry',
@@ -2610,9 +2317,7 @@ const Definition: {
                 {name: 'address', parameterType: ParameterType.IEEEADDR},
                 {name: 'panid', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'srcMatchDelEntry',
@@ -2623,9 +2328,7 @@ const Definition: {
                 {name: 'address', parameterType: ParameterType.IEEEADDR},
                 {name: 'panid', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'srcMatchCheckSrcAddr',
@@ -2636,27 +2339,20 @@ const Definition: {
                 {name: 'address', parameterType: ParameterType.IEEEADDR},
                 {name: 'panid', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'srcMatchAckAllPending',
             ID: 36,
             type: CommandType.SREQ,
-            request: [
-                {name: 'option', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'option', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'srcMatchCheckAllPending',
             ID: 37,
             type: CommandType.SREQ,
-            request: [
-            ],
+            request: [],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'value', parameterType: ParameterType.UINT8},
@@ -2666,31 +2362,21 @@ const Definition: {
             name: 'addrmgrExtAddrLookup',
             ID: 64,
             type: CommandType.SREQ,
-            request: [
-                {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
-            ],
-            response: [
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-            ],
+            request: [{name: 'extaddr', parameterType: ParameterType.IEEEADDR}],
+            response: [{name: 'nwkaddr', parameterType: ParameterType.UINT16}],
         },
         {
             name: 'addrmgrNwkAddrLookup',
             ID: 65,
             type: CommandType.SREQ,
-            request: [
-                {name: 'nwkaddr', parameterType: ParameterType.UINT16},
-            ],
-            response: [
-                {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
-            ],
+            request: [{name: 'nwkaddr', parameterType: ParameterType.UINT16}],
+            response: [{name: 'extaddr', parameterType: ParameterType.IEEEADDR}],
         },
         {
             name: 'apsmeLinkKeyDataGet',
             ID: 68,
             type: CommandType.SREQ,
-            request: [
-                {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
-            ],
+            request: [{name: 'extaddr', parameterType: ParameterType.IEEEADDR}],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'seckey', parameterType: ParameterType.BUFFER16},
@@ -2702,9 +2388,7 @@ const Definition: {
             name: 'apsmeLinkKeyNvIdGet',
             ID: 69,
             type: CommandType.SREQ,
-            request: [
-                {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
-            ],
+            request: [{name: 'extaddr', parameterType: ParameterType.IEEEADDR}],
             response: [
                 {name: 'status', parameterType: ParameterType.UINT8},
                 {name: 'linkkeynvid', parameterType: ParameterType.UINT16},
@@ -2718,20 +2402,14 @@ const Definition: {
                 {name: 'startrelation', parameterType: ParameterType.UINT8},
                 {name: 'endrelation', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'count', parameterType: ParameterType.UINT16},
-            ],
+            response: [{name: 'count', parameterType: ParameterType.UINT16}],
         },
         {
             name: 'assocFindDevice',
             ID: 73,
             type: CommandType.SREQ,
-            request: [
-                {name: 'number', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'device', parameterType: ParameterType.BUFFER18},
-            ],
+            request: [{name: 'number', parameterType: ParameterType.UINT8}],
+            response: [{name: 'device', parameterType: ParameterType.BUFFER18}],
         },
         {
             name: 'assocGetWithAddress',
@@ -2752,24 +2430,16 @@ const Definition: {
             name: 'apsmeRequestKeyCmd',
             ID: 75,
             type: CommandType.SREQ,
-            request: [
-                {name: 'partneraddr', parameterType: ParameterType.IEEEADDR},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'partneraddr', parameterType: ParameterType.IEEEADDR}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             // Custom command
             name: 'assocRemove',
             ID: 99,
             type: CommandType.SREQ,
-            request: [
-                {name: 'ieeeadr', parameterType: ParameterType.IEEEADDR},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'ieeeadr', parameterType: ParameterType.IEEEADDR}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             // Custom command
@@ -2781,9 +2451,7 @@ const Definition: {
                 {name: 'nwkaddr', parameterType: ParameterType.UINT16},
                 {name: 'noderelation', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'zclKeyEstInitEst',
@@ -2796,9 +2464,7 @@ const Definition: {
                 {name: 'addrmode', parameterType: ParameterType.UINT8},
                 {name: 'extaddr', parameterType: ParameterType.IEEEADDR},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'zclKeyEstSign',
@@ -2817,8 +2483,7 @@ const Definition: {
             name: 'syncReq',
             ID: 224,
             type: CommandType.AREQ,
-            request: [
-            ],
+            request: [],
         },
         {
             name: 'zclKeyEstablishInd',
@@ -2854,8 +2519,7 @@ const Definition: {
             name: 'gpioRead',
             ID: 21,
             type: CommandType.SREQ,
-            request: [
-            ],
+            request: [],
             response: [
                 {name: 'p0', parameterType: ParameterType.UINT8},
                 {name: 'p1', parameterType: ParameterType.UINT8},
@@ -2890,11 +2554,8 @@ const Definition: {
             name: 'srngGen',
             ID: 76,
             type: CommandType.SREQ,
-            request: [
-            ],
-            response: [
-                {name: 'outrng', parameterType: ParameterType.BUFFER100},
-            ],
+            request: [],
+            response: [{name: 'outrng', parameterType: ParameterType.BUFFER100}],
         },
         {
             name: 'bindAddEntry',
@@ -2926,9 +2587,7 @@ const Definition: {
                 {name: 'componentid', parameterType: ParameterType.UINT8},
                 {name: 'threshold', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'msg',
@@ -2953,9 +2612,7 @@ const Definition: {
                 {name: 'msglen', parameterType: ParameterType.UINT8},
                 {name: 'message', parameterType: ParameterType.BUFFER},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'userTest',
@@ -2967,9 +2624,7 @@ const Definition: {
                 {name: 'param1', parameterType: ParameterType.UINT16},
                 {name: 'param2', parameterType: ParameterType.UINT16},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'zllTlInd',
@@ -2986,15 +2641,22 @@ const Definition: {
     ],
     [Subsystem.APP_CNF]: [
         {
+            name: 'bdbAddInstallCode',
+            ID: 4,
+            type: CommandType.SREQ,
+            request: [
+                {name: 'installCodeFormat', parameterType: ParameterType.UINT8},
+                {name: 'ieeeaddr', parameterType: ParameterType.IEEEADDR},
+                {name: 'installCode', parameterType: ParameterType.BUFFER},
+            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
+        },
+        {
             name: 'bdbStartCommissioning',
             ID: 5,
             type: CommandType.SREQ,
-            request: [
-                {name: 'mode', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'mode', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'bdbSetChannel',
@@ -3004,42 +2666,27 @@ const Definition: {
                 {name: 'isPrimary', parameterType: ParameterType.UINT8},
                 {name: 'channel', parameterType: ParameterType.UINT32},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'bdbSetTcRequireKeyExchange',
             ID: 9,
             type: CommandType.SREQ,
-            request: [
-                {name: 'value', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ]
+            request: [{name: 'value', parameterType: ParameterType.UINT8}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'bdbComissioningNotifcation',
             ID: 128,
             type: CommandType.AREQ,
-            request: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            request: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
         {
             name: 'setNwkFrameCounter',
             ID: 255,
             type: CommandType.SREQ,
-            request: [
-                {name: 'value', parameterType: ParameterType.UINT32}
-            ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8}
-            ]
+            request: [{name: 'value', parameterType: ParameterType.UINT32}],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
     ],
     [Subsystem.GREENPOWER]: [
@@ -3056,12 +2703,11 @@ const Definition: {
                 {name: 'gpdfSecurityFrameCounter', parameterType: ParameterType.UINT8},
                 {name: 'dgpStubHandle', parameterType: ParameterType.UINT8},
             ],
-            response: [
-                {name: 'status', parameterType: ParameterType.UINT8},
-            ],
+            response: [{name: 'status', parameterType: ParameterType.UINT8}],
         },
     ],
+    [Subsystem.RESERVED]: [],
+    [Subsystem.NWK]: [],
 };
-
 
 export default Definition;

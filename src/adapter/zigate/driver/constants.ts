@@ -1,6 +1,4 @@
-/* istanbul ignore file */
-
-/* eslint-disable */
+import {ClusterId as ZdoClusterId} from '../../../zspec/zdo';
 
 export enum ADDRESS_MODE {
     bound = 0x00, //Use one or more bound nodes/endpoints, with acknowledgements
@@ -28,14 +26,14 @@ export enum BOOLEAN {
 }
 
 export enum LOG_LEVEL {
-    "EMERG",
-    "ALERT",
-    "CRIT ",
-    "ERROR",
-    "WARN ",
-    "NOT  ",
-    "INFO ",
-    "DEBUG"
+    'EMERG',
+    'ALERT',
+    'CRIT ',
+    'ERROR',
+    'WARN ',
+    'NOT  ',
+    'INFO ',
+    'DEBUG',
 }
 
 export enum NODE_LOGICAL_TYPE {
@@ -43,7 +41,6 @@ export enum NODE_LOGICAL_TYPE {
     router = 0x01,
     end_device = 0x02,
 }
-
 
 export enum STATUS {
     E_SL_MSG_STATUS_SUCCESS,
@@ -200,7 +197,6 @@ export enum ZiGateCommandCode {
     Reset = 0x0011,
     ErasePersistentData = 0x0012,
     RemoveDevice = 0x0026,
-    PermitJoin = 0x0049,
     RawAPSDataRequest = 0x0530,
     GetTimeServer = 0x0017,
     SetTimeServer = 0x0016,
@@ -210,33 +206,62 @@ export enum ZiGateCommandCode {
     StartNetwork = 0x0024,
     StartNetworkScan = 0x0025,
     SetCertification = 0x0019,
-    Bind = 0x0030,
-    UnBind = 0x0031,
 
     // ResetFactoryNew = 0x0013,
     OnOff = 0x0092,
     OnOffTimed = 0x0093,
-    ActiveEndpoint = 0x0045,
     AttributeDiscovery = 0x0140,
     AttributeRead = 0x0100,
     AttributeWrite = 0x0110,
     DescriptorComplex = 0x0531,
-    NodeDescriptor = 0x0042,
-    PowerDescriptor = 0x0044,
-    SimpleDescriptor = 0x0043,
-    SetDeviceType = 0x0023,
+
+    // zdo
+    Bind = 0x0030,
+    UnBind = 0x0031,
+    NwkAddress = 0x0040,
     IEEEAddress = 0x0041,
+    NodeDescriptor = 0x0042,
+    SimpleDescriptor = 0x0043,
+    PowerDescriptor = 0x0044,
+    ActiveEndpoint = 0x0045,
+    MatchDescriptor = 0x0046,
+    // ManagementLeaveRequest = 0x0047, XXX: some non-standard form of LeaveRequest?
+    PermitJoin = 0x0049,
+    ManagementNetworkUpdate = 0x004a,
+    SystemServerDiscovery = 0x004b,
+    LeaveRequest = 0x004c,
+    ManagementLQI = 0x004e,
+    // ManagementRtg = 0x004?,
+    // ManagementBind = 0x004?,
+
+    SetDeviceType = 0x0023,
     LED = 0x0018,
     SetTXpower = 0x0806,
-    ManagementLeaveRequest = 0x0047,
-    ManagementLQI = 0x004E,
     SetSecurityStateKey = 0x0022,
     AddGroup = 0x0060,
 }
 
+export const ZDO_REQ_CLUSTER_ID_TO_ZIGATE_COMMAND_ID: Readonly<Partial<Record<ZdoClusterId, ZiGateCommandCode>>> = {
+    [ZdoClusterId.NETWORK_ADDRESS_REQUEST]: ZiGateCommandCode.NwkAddress,
+    [ZdoClusterId.IEEE_ADDRESS_REQUEST]: ZiGateCommandCode.IEEEAddress,
+    [ZdoClusterId.NODE_DESCRIPTOR_REQUEST]: ZiGateCommandCode.NodeDescriptor,
+    [ZdoClusterId.POWER_DESCRIPTOR_REQUEST]: ZiGateCommandCode.PowerDescriptor,
+    [ZdoClusterId.SIMPLE_DESCRIPTOR_REQUEST]: ZiGateCommandCode.SimpleDescriptor,
+    [ZdoClusterId.MATCH_DESCRIPTORS_REQUEST]: ZiGateCommandCode.MatchDescriptor,
+    [ZdoClusterId.ACTIVE_ENDPOINTS_REQUEST]: ZiGateCommandCode.ActiveEndpoint,
+    [ZdoClusterId.SYSTEM_SERVER_DISCOVERY_REQUEST]: ZiGateCommandCode.SystemServerDiscovery,
+    [ZdoClusterId.BIND_REQUEST]: ZiGateCommandCode.Bind,
+    [ZdoClusterId.UNBIND_REQUEST]: ZiGateCommandCode.UnBind,
+    [ZdoClusterId.LQI_TABLE_REQUEST]: ZiGateCommandCode.ManagementLQI,
+    // [ZdoClusterId.ROUTING_TABLE_REQUEST]: ZiGateCommandCode.ManagementRtg,
+    // [ZdoClusterId.BINDING_TABLE_REQUEST]: ZiGateCommandCode.ManagementBind,
+    [ZdoClusterId.LEAVE_REQUEST]: ZiGateCommandCode.LeaveRequest,
+    [ZdoClusterId.NWK_UPDATE_REQUEST]: ZiGateCommandCode.ManagementNetworkUpdate,
+    [ZdoClusterId.PERMIT_JOINING_REQUEST]: ZiGateCommandCode.PermitJoin,
+};
 
 export enum ZiGateMessageCode {
-    DeviceAnnounce = 0x004D,
+    DeviceAnnounce = 0x004d,
     Status = 0x8000,
     LOG = 0x8001,
     DataIndication = 0x8002,
@@ -254,7 +279,7 @@ export enum ZiGateMessageCode {
     RouterDiscoveryConfirm = 0x8701,
     PermitJoinStatus = 0x8014,
     GetTimeServer = 0x8017,
-    ManagementLQIResponse = 0x804E,
+    ManagementLQIResponse = 0x804e,
     ManagementLeaveResponse = 0x8047,
     PDMEvent = 0x8035,
     PDMLoaded = 0x0302,
@@ -264,9 +289,8 @@ export enum ZiGateMessageCode {
     AddGroupResponse = 0x8060,
 }
 
-// eslint-disable-next-line
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZiGateObjectPayload = any;
-
 
 export enum ZPSNwkKeyState {
     ZPS_ZDO_NO_NETWORK_KEY,
@@ -276,7 +300,7 @@ export enum ZPSNwkKeyState {
 }
 
 export enum ZPSNwkKeyType {
-    ZPS_APS_UNIQUE_LINK_KEY,                 /*Initial key*/
+    ZPS_APS_UNIQUE_LINK_KEY /*Initial key*/,
     ZPS_APS_GLOBAL_LINK_KEY,
 }
 
@@ -296,87 +320,30 @@ export enum PDMEventType {
     E_PDM_SYSTEM_EVENT_SEQUENCE_DUPLICATE_DETECTED,
     E_PDM_SYSTEM_EVENT_SEQUENCE_VERIFY_FAIL,
     E_PDM_SYSTEM_EVENT_PDM_SMART_SAVE,
-    E_PDM_SYSTEM_EVENT_PDM_FULL_SAVE
+    E_PDM_SYSTEM_EVENT_PDM_FULL_SAVE,
 }
 
-
-const coordinatorEndpoints: any = [
+const coordinatorEndpoints: readonly {ID: number; profileID: number; deviceID: number; inputClusters: number[]; outputClusters: number[]}[] = [
     {
         ID: 0x01,
         profileID: 0x0104,
         deviceID: 0x0840,
-        inputClusters: [
-            0x0000,
-            0x0003,
-            0x0019,
-            0x0204,
-            0x000F,
-        ],
+        inputClusters: [0x0000, 0x0003, 0x0019, 0x0204, 0x000f],
         outputClusters: [
-            0x0B03,
-            0x0000,
-            0x0300,
-            0x0004,
-            0x0003,
-            0x0008,
-            0x0006,
-            0x0005,
-            0x0101,
-            0x0702,
-            0x0500,
-            0x0019,
-            0x0201,
-            0x0401,
-            0x0400,
-            0x0406,
-            0x0403,
-            0x0405,
-            0x0402,
-            0x0204,
-            0x0001,
-            0x0B05,
-            0x1000
-        ]
+            0x0b03, 0x0000, 0x0300, 0x0004, 0x0003, 0x0008, 0x0006, 0x0005, 0x0101, 0x0702, 0x0500, 0x0019, 0x0201, 0x0401, 0x0400, 0x0406, 0x0403,
+            0x0405, 0x0402, 0x0204, 0x0001, 0x0b05, 0x1000,
+        ],
     },
     {
-        ID: 0x0A,
+        ID: 0x0a,
         profileID: 0x0104,
         deviceID: 0x0840,
-        inputClusters: [
-            0x0000,
-            0x0003,
-            0x0019,
-            0x0204,
-            0x000F,
-        ],
+        inputClusters: [0x0000, 0x0003, 0x0019, 0x0204, 0x000f],
         outputClusters: [
-            0x0B03,
-            0x0000,
-            0x0300,
-            0x0004,
-            0x0003,
-            0x0008,
-            0x0006,
-            0x0005,
-            0x0101,
-            0x0702,
-            0x0500,
-            0x0019,
-            0x0201,
-            0x0401,
-            0x0400,
-            0x0406,
-            0x0403,
-            0x0405,
-            0x0402,
-            0x0204,
-            0x0001,
-            0x0B05,
-            0x1000
-        ]
-    }
+            0x0b03, 0x0000, 0x0300, 0x0004, 0x0003, 0x0008, 0x0006, 0x0005, 0x0101, 0x0702, 0x0500, 0x0019, 0x0201, 0x0401, 0x0400, 0x0406, 0x0403,
+            0x0405, 0x0402, 0x0204, 0x0001, 0x0b05, 0x1000,
+        ],
+    },
 ];
 
 export {coordinatorEndpoints};
-
-

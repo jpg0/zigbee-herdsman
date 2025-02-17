@@ -1,14 +1,14 @@
-/* istanbul ignore file */
-/* eslint-disable */
-import {Debug} from '../debug';
+/* v8 ignore start */
 
-const debug = Debug('driver:frame');
+import {logger} from '../../../utils/logger';
+
+const NS = 'zh:zigate:frame';
 
 enum ZiGateFrameChunkSize {
     UInt8 = 1,
     UInt16,
     UInt32,
-    UInt64
+    UInt64,
 }
 
 const hasStartByte = (startByte: number, frame: Buffer): boolean => {
@@ -52,10 +52,7 @@ const xor = (checksum: number, byte: number): number => {
 };
 
 const decodeFrame = (frame: Buffer): Buffer => {
-    const arrFrame = Array.from(frame)
-        .map(combineBytes)
-        .filter(removeDuplicate)
-        .map(decodeBytes);
+    const arrFrame = Array.from(frame).map(combineBytes).filter(removeDuplicate).map(decodeBytes);
 
     return Buffer.from(arrFrame);
 };
@@ -79,26 +76,25 @@ export default class ZiGateFrame {
     constructor(frame?: Buffer) {
         if (frame !== undefined) {
             const decodedFrame = decodeFrame(frame);
-            // debug.log(`decoded frame >>> %o`, decodedFrame);
+            // logger.debug(`decoded frame >>> %o`, decodedFrame, NS);
             // Due to ZiGate incoming frames with erroneous msg length
             this.msgLengthOffset = -1;
 
             if (!ZiGateFrame.isValid(frame)) {
-                debug.error('Provided frame is not a valid ZiGate frame.');
+                logger.error('Provided frame is not a valid ZiGate frame.', NS);
                 return;
             }
 
             this.buildChunks(decodedFrame);
 
             try {
-                if(this.readMsgCode() !== 0x8001)
-                    debug.log(`%o`, this);
-            } catch (e) {
-                debug.error(e)
+                if (this.readMsgCode() !== 0x8001) logger.debug(() => `${JSON.stringify(this)}`, NS);
+            } catch (error) {
+                logger.error((error as Error).stack!, NS);
             }
 
             if (this.readChecksum() !== this.calcChecksum()) {
-                debug.error(`Provided frame has an invalid checksum.`);
+                logger.error(`Provided frame has an invalid checksum.`, NS);
                 return;
             }
         }
@@ -119,23 +115,11 @@ export default class ZiGateFrame {
     toBuffer(): Buffer {
         const length = 5 + this.readMsgLength();
 
-        const escapedData = this.escapeData(Buffer.concat(
-            [
-                this.msgCodeBytes,
-                this.msgLengthBytes,
-                this.checksumBytes,
-                this.msgPayloadBytes,
-            ],
-            length,
-        ));
-
-        return Buffer.concat(
-            [
-                Uint8Array.from([ZiGateFrame.START_BYTE]),
-                escapedData,
-                Uint8Array.from([ZiGateFrame.STOP_BYTE]),
-            ]
+        const escapedData = this.escapeData(
+            Buffer.concat([this.msgCodeBytes, this.msgLengthBytes, this.checksumBytes, this.msgPayloadBytes], length),
         );
+
+        return Buffer.concat([Uint8Array.from([ZiGateFrame.START_BYTE]), escapedData, Uint8Array.from([ZiGateFrame.STOP_BYTE])]);
     }
 
     escapeData(data: Buffer): Buffer {
