@@ -1,15 +1,14 @@
-/* istanbul ignore file */
-/* eslint-disable */
-import * as stream from 'stream';
-// @ts-ignore
+/* v8 ignore start */
+
+import {Transform, TransformCallback} from 'node:stream';
+
 import slip from 'slip';
-import Frame from './frame';
-import Debug from "debug";
 
-const debug = Debug('zigbee-herdsman:deconz:driver:parser');
+import {logger} from '../../../utils/logger';
 
-class Parser extends stream.Transform {
-    private buffer: Buffer;
+const NS = 'zh:deconz:driver:parser';
+
+class Parser extends Transform {
     private decoder: slip.Decoder;
 
     public constructor() {
@@ -20,24 +19,25 @@ class Parser extends stream.Transform {
 
         this.decoder = new slip.Decoder({
             onMessage: this.onMessage,
+            onError: this.onError,
             maxMessageSize: 1000000,
-            bufferSize: 2048
+            bufferSize: 2048,
         });
     }
 
     private onMessage(message: Uint8Array): void {
-        //debug(`message received: ${message}`);
+        //logger.debug(`message received: ${message}`, NS);
         this.emit('parsed', message);
     }
 
     private onError(_: Uint8Array, error: string): void {
-        debug(`<-- error '${error}'`);
+        logger.debug(`<-- error '${error}'`, NS);
     }
 
-    public _transform(chunk: Buffer, _: string, cb: Function): void {
-        //debug(`<-- [${[...chunk]}]`);
+    public override _transform(chunk: Buffer, _: string, cb: TransformCallback): void {
+        //logger.debug(`<-- [${[...chunk]}]`, NS);
         this.decoder.decode(chunk);
-        //debug(`<-- [${[...chunk]}]`);
+        //logger.debug(`<-- [${[...chunk]}]`, NS);
         cb();
     }
 }

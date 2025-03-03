@@ -1,9 +1,9 @@
-import {ZnpVersion} from "../adapter/z-stack/adapter/tstype";
-import {NetworkOptions} from "./network-options";
+import {ZnpVersion} from '../adapter/z-stack/adapter/tstype';
+import {NetworkOptions} from './network-options';
 
 /**
  * Internal representation of stored backup. Contains all essential network information.
- * 
+ *
  * Additional `znp` object may contain extra information specific to Z-Stack based coordinators.
  */
 export interface Backup {
@@ -17,7 +17,7 @@ export interface Backup {
     networkUpdateId: number;
     coordinatorIeeeAddress: Buffer;
     devices: {
-        networkAddress: number;
+        networkAddress: number | null;
         ieeeAddress: Buffer;
         isDirectChild: boolean;
         linkKey?: {
@@ -29,5 +29,9 @@ export interface Backup {
     znp?: {
         version?: ZnpVersion;
         trustCenterLinkKeySeed?: Buffer;
+    };
+    ezsp?: {
+        version?: number;
+        hashed_tclk?: Buffer;
     };
 }

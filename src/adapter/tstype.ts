@@ -1,4 +1,14 @@
-interface NetworkOptions {
+export type Adapter = 'deconz' | 'ember' | 'zstack' | 'zboss' | 'zigate' | 'ezsp';
+export type DiscoverableUSBAdapter = 'deconz' | 'ember' | 'zstack' | 'zboss' | 'zigate';
+
+export type USBAdapterFingerprint = {
+    vendorId: string;
+    productId: string;
+    manufacturer?: string;
+    pathRegex: string;
+};
+
+export interface NetworkOptions {
     panID: number;
     extendedPanID?: number[];
     channelList: number[];
@@ -6,39 +16,31 @@ interface NetworkOptions {
     networkKeyDistribute?: boolean;
 }
 
-interface SerialPortOptions {
+export interface SerialPortOptions {
     baudRate?: number;
     rtscts?: boolean;
     path?: string;
-    adapter?: 'zstack' | 'deconz' | 'zigate' | 'ezsp' | 'auto';
+    adapter?: Adapter;
 }
 
-interface AdapterOptions {
+export interface AdapterOptions {
     concurrent?: number;
     delay?: number;
     disableLED: boolean;
+    transmitPower?: number;
     forceStartWithInconsistentAdapterConfiguration?: boolean;
 }
 
-interface CoordinatorVersion {
+export interface CoordinatorVersion {
     type: string;
     meta: {[s: string]: number | string};
 }
 
-type DeviceType = 'Coordinator' | 'EndDevice' | 'Router' | 'Unknown';
+export type DeviceType = 'Coordinator' | 'EndDevice' | 'Router' | 'Unknown';
 
-type StartResult = 'resumed' | 'reset' | 'restored';
+export type StartResult = 'resumed' | 'reset' | 'restored';
 
-interface NodeDescriptor {
-    type: DeviceType;
-    manufacturerCode: number;
-}
-
-interface ActiveEndpoints {
-    endpoints: number[];
-}
-
-interface LQINeighbor {
+export interface LQINeighbor {
     ieeeAddr: string;
     networkAddress: number;
     linkquality: number;
@@ -46,57 +48,31 @@ interface LQINeighbor {
     depth: number;
 }
 
-interface LQI {
+export interface LQI {
     neighbors: LQINeighbor[];
 }
 
-interface RoutingTableEntry {
+export interface RoutingTableEntry {
     destinationAddress: number;
     status: string;
     nextHop: number;
 }
 
-interface RoutingTable {
+export interface RoutingTable {
     table: RoutingTableEntry[];
 }
 
-interface SimpleDescriptor {
-    profileID: number;
-    endpointID: number;
-    deviceID: number;
-    inputClusters: number[];
-    outputClusters: number[];
-}
-
-interface Coordinator {
-    ieeeAddr: string;
-    networkAddress: number;
-    manufacturerID: number;
-    endpoints: {
-        ID: number;
-        profileID: number;
-        deviceID: number;
-        inputClusters: number[];
-        outputClusters: number[];
-    }[];
-}
-
-interface Backup {
-    adapterType: "zStack";
+export interface Backup {
+    adapterType: 'zStack';
     time: string;
     meta: {[s: string]: number};
-    // eslint-disable-next-line
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: any;
 }
 
-interface NetworkParameters {
+export interface NetworkParameters {
     panID: number;
-    extendedPanID: number;
+    extendedPanID: string; // `0x${string}` same as IEEE address
     channel: number;
+    nwkUpdateID: number;
 }
-
-export {
-    SerialPortOptions, NetworkOptions, Coordinator, CoordinatorVersion, NodeDescriptor,
-    DeviceType, ActiveEndpoints, SimpleDescriptor, LQI, LQINeighbor, RoutingTable, Backup, NetworkParameters,
-    StartResult, RoutingTableEntry, AdapterOptions,
-};

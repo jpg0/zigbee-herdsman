@@ -1,17 +1,19 @@
-/* istanbul ignore file */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* v8 ignore start */
+
 import * as basic from './basic';
 import * as named from './named';
 
 export class EzspStruct {
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
     static serialize(cls: any, obj: any): Buffer {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-        return Buffer.concat(cls._fields.map((field: any[]) => {
-            const value = obj[field[0]];
-            console.assert(field[1]);
-            return field[1].serialize(field[1], value);
-        }));
+        return Buffer.concat(
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
+            cls._fields.map((field: any[]) => {
+                const value = obj[field[0]];
+                // console.assert(field[1]);
+                return field[1].serialize(field[1], value);
+            }),
+        );
     }
 
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
@@ -31,13 +33,21 @@ export class EzspStruct {
 }
 
 export class EmberNetworkParameters extends EzspStruct {
-    public extendedPanId: number[];
+    // @ts-expect-error set via _fields
+    public extendedPanId: Buffer;
+    // @ts-expect-error set via _fields
     public panId: number;
+    // @ts-expect-error set via _fields
     public radioTxPower: number;
+    // @ts-expect-error set via _fields
     public radioChannel: number;
+    // @ts-expect-error set via _fields
     public joinMethod: named.EmberJoinMethod;
+    // @ts-expect-error set via _fields
     public nwkManagerId: named.EmberNodeId;
+    // @ts-expect-error set via _fields
     public nwkUpdateId: number;
+    // @ts-expect-error set via _fields
     public channels: number;
 
     static _fields = [
@@ -87,14 +97,18 @@ export class EmberZigbeeNetwork extends EzspStruct {
 }
 
 export class EmberApsFrame extends EzspStruct {
+    // @ts-expect-error set via _fields
     public profileId: number;
+    // @ts-expect-error set via _fields
     public sequence: number;
+    // @ts-expect-error set via _fields
     public clusterId: number;
+    // @ts-expect-error set via _fields
     public sourceEndpoint: number;
+    // @ts-expect-error set via _fields
     public destinationEndpoint: number;
     public groupId?: number;
     public options?: named.EmberApsOption;
-
 
     // ZigBee APS frame parameters.
     static _fields = [
@@ -140,8 +154,11 @@ export class EmberBindingTableEntry extends EzspStruct {
 }
 
 export class EmberMulticastTableEntry extends EzspStruct {
+    // @ts-expect-error set via _fields
     public multicastId: number;
+    // @ts-expect-error set via _fields
     public endpoint: number;
+    // @ts-expect-error set via _fields
     public networkIndex: number;
     // A multicast table entry indicates that a particular endpoint is a member
     // of a particular multicast group.Only devices with an endpoint in a
@@ -158,6 +175,7 @@ export class EmberMulticastTableEntry extends EzspStruct {
 }
 
 export class EmberKeyData extends EzspStruct {
+    // @ts-expect-error set via _fields
     public contents: Buffer;
     // A 128- bit key.
     static _fields = [
@@ -167,16 +185,17 @@ export class EmberKeyData extends EzspStruct {
 }
 
 export class EmberCertificateData extends EzspStruct {
+    // @ts-expect-error set via _fields
     public contents: Buffer;
     // The implicit certificate used in CBKE.
     static _fields = [
         // The certificate data.
         ['contents', basic.fixed_list(48, basic.uint8_t)],
     ];
-
 }
 
 export class EmberPublicKeyData extends EzspStruct {
+    // @ts-expect-error set via _fields
     public contents: Buffer;
     // The public key data used in CBKE.
     static _fields = [
@@ -186,6 +205,7 @@ export class EmberPublicKeyData extends EzspStruct {
 }
 
 export class EmberPrivateKeyData extends EzspStruct {
+    // @ts-expect-error set via _fields
     public contents: Buffer;
     // The private key data used in CBKE.
     static _fields = [
@@ -251,6 +271,10 @@ export class EmberMessageDigest extends EzspStruct {
 }
 
 export class EmberAesMmoHashContext extends EzspStruct {
+    // @ts-expect-error set via _fields
+    public result: Buffer;
+    // @ts-expect-error set via _fields
+    public length: number;
     // The hash context for an ongoing hash operation.
     static _fields = [
         // The result of ongoing the hash operation.
@@ -312,10 +336,15 @@ export class EmberRouteTableEntry extends EzspStruct {
 }
 
 export class EmberInitialSecurityState extends EzspStruct {
+    // @ts-expect-error set via _fields
     public bitmask: number;
+    // @ts-expect-error set via _fields
     public preconfiguredKey: EmberKeyData;
+    // @ts-expect-error set via _fields
     public networkKey: EmberKeyData;
+    // @ts-expect-error set via _fields
     public networkKeySequenceNumber: number;
+    // @ts-expect-error set via _fields
     public preconfiguredTrustCenterEui64: named.EmberEUI64;
 
     // The security data used to set the configuration for the stack, or the
@@ -361,6 +390,12 @@ export class EmberCurrentSecurityState extends EzspStruct {
 }
 
 export class EmberKeyStruct extends EzspStruct {
+    // @ts-expect-error set via _fields
+    public key: EmberKeyData;
+    // @ts-expect-error set via _fields
+    public outgoingFrameCounter: number;
+    // @ts-expect-error set via _fields
+    public sequenceNumber: number;
     // A structure containing a key and its associated data.
     static _fields = [
         // A bitmask indicating the presence of data within the various fields
@@ -614,7 +649,6 @@ export class EmberNodeDescriptor extends EzspStruct {
     ];
 }
 
-
 export class EmberSimpleDescriptor extends EzspStruct {
     static _fields = [
         ['endpoint', basic.uint8_t],
@@ -637,16 +671,18 @@ export class EmberMultiAddress extends EzspStruct {
         ['nwk', named.EmberNodeId],
     ];
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-    static serialize(cls: any, obj: any): Buffer {
+    static override serialize(cls: any, obj: any): Buffer {
         const addrmode = obj['addrmode'];
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-        const fields = (addrmode == 3) ? cls.fields3 : cls.fields1;
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-        return Buffer.concat(fields.map((field: any[]) => {
-            const value = obj[field[0]];
-            console.assert(field[1]);
-            return field[1].serialize(field[1], value);
-        }));
+
+        const fields = addrmode == 3 ? cls.fields3 : cls.fields1;
+        return Buffer.concat(
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
+            fields.map((field: any[]) => {
+                const value = obj[field[0]];
+                // console.assert(field[1]);
+                return field[1].serialize(field[1], value);
+            }),
+        );
     }
 }
 
@@ -667,5 +703,147 @@ export class EmberNeighbors extends EzspStruct {
         ['entries', basic.uint8_t],
         ['startindex', basic.uint8_t],
         ['neighbors', basic.LVList(EmberNeighbor)],
+    ];
+}
+
+export class EmberRoutingTableEntry extends EzspStruct {
+    static _fields = [
+        ['destination', basic.uint16_t],
+        ['status', basic.uint8_t],
+        ['nexthop', basic.uint16_t],
+    ];
+}
+
+export class EmberRoutingTable extends EzspStruct {
+    static _fields = [
+        ['entries', basic.uint8_t],
+        ['startindex', basic.uint8_t],
+        ['table', basic.LVList(EmberRoutingTableEntry)],
+    ];
+}
+
+export class EmberRawFrame extends EzspStruct {
+    // @ts-expect-error set via _fields
+    public ieeeFrameControl: number;
+    // @ts-expect-error set via _fields
+    public sequence: number;
+    // @ts-expect-error set via _fields
+    public destPanId: number;
+    // @ts-expect-error set via _fields
+    public destNodeId: named.EmberNodeId;
+    // @ts-expect-error set via _fields
+    public sourcePanId: number;
+    // @ts-expect-error set via _fields
+    public ieeeAddress: named.EmberEUI64;
+    // @ts-expect-error set via _fields
+    public nwkFrameControl: number;
+    // @ts-expect-error set via _fields
+    public appFrameControl: number;
+    // @ts-expect-error set via _fields
+    public clusterId: number;
+    // @ts-expect-error set via _fields
+    public profileId: number;
+
+    static _fields = [
+        ['ieeeFrameControl', basic.uint16_t],
+        ['sequence', basic.uint8_t],
+        ['destPanId', named.EmberPanId],
+        ['destNodeId', named.EmberNodeId],
+        ['sourcePanId', named.EmberPanId],
+        ['ieeeAddress', named.EmberEUI64],
+        ['nwkFrameControl', basic.uint16_t],
+        ['appFrameControl', basic.uint8_t],
+        ['clusterId', basic.uint16_t],
+        ['profileId', basic.uint16_t],
+    ];
+}
+
+export class EmberIeeeRawFrame extends EzspStruct {
+    // @ts-expect-error set via _fields
+    public ieeeFrameControl: number;
+    // @ts-expect-error set via _fields
+    public sequence: number;
+    // @ts-expect-error set via _fields
+    public destPanId: number;
+    // @ts-expect-error set via _fields
+    public destAddress: named.EmberEUI64;
+    // @ts-expect-error set via _fields
+    public sourcePanId: number;
+    // @ts-expect-error set via _fields
+    public sourceAddress: named.EmberEUI64;
+    // @ts-expect-error set via _fields
+    public nwkFrameControl: number;
+    // @ts-expect-error set via _fields
+    public appFrameControl: number;
+    // @ts-expect-error set via _fields
+    public clusterId: number;
+    // @ts-expect-error set via _fields
+    public profileId: number;
+    static _fields = [
+        ['ieeeFrameControl', basic.uint16_t],
+        ['sequence', basic.uint8_t],
+        ['destPanId', named.EmberPanId],
+        ['destAddress', named.EmberEUI64],
+        ['sourcePanId', named.EmberPanId],
+        ['sourceAddress', named.EmberEUI64],
+        ['nwkFrameControl', basic.uint16_t],
+        ['appFrameControl', basic.uint8_t],
+        ['clusterId', basic.uint16_t],
+        ['profileId', basic.uint16_t],
+    ];
+}
+
+export class EmberSecurityManagerContext extends EzspStruct {
+    // Context for Zigbee Security Manager operations.
+    // @ts-expect-error set via _fields
+    public type: named.EmberKeyType;
+    // @ts-expect-error set via _fields
+    public index: number;
+    // @ts-expect-error set via _fields
+    public derivedType: named.EmberDerivedKeyType;
+    // @ts-expect-error set via _fields
+    public eui64: named.EmberEUI64;
+    // @ts-expect-error set via _fields
+    public multiNetworkIndex: number;
+    // @ts-expect-error set via _fields
+    public flags: number;
+    // @ts-expect-error set via _fields
+    public psaKeyAlgPermission: basic.uint32_t;
+    static _fields = [
+        // The type of key being referenced.
+        ['type', named.EmberKeyType],
+        // The index of the referenced key.
+        ['index', basic.uint8_t],
+        // The type of key derivation operation to perform on a key.
+        ['derivedType', named.EmberDerivedKeyType],
+        // The EUI64 associated with this key.
+        ['eui64', named.EmberEUI64],
+        // Multi-network index.
+        ['multiNetworkIndex', basic.uint8_t],
+        // Flag bitmask.
+        ['flags', basic.uint8_t],
+        // Algorithm to use with this key (for PSA APIs)
+        ['psaKeyAlgPermission', basic.uint32_t],
+    ];
+}
+
+/** This data structure contains the metadata pertaining to an network key */
+export class EmberSecurityManagerNetworkKeyInfo extends EzspStruct {
+    // @ts-expect-error set via _fields
+    public networkKeySet: number; // boolean
+    // @ts-expect-error set via _fields
+    public alternateNetworkKeySet: number; // boolean
+    // @ts-expect-error set via _fields
+    public networkKeySequenceNumber: number;
+    // @ts-expect-error set via _fields
+    public altNetworkKeySequenceNumber: number;
+    // @ts-expect-error set via _fields
+    public networkKeyFrameCounter: number;
+    static _fields = [
+        ['networkKeySet', basic.uint8_t],
+        ['alternateNetworkKeySet', basic.uint8_t],
+        ['networkKeySequenceNumber', basic.uint8_t],
+        ['altNetworkKeySequenceNumber', basic.uint8_t],
+        ['networkKeyFrameCounter', basic.uint32_t],
     ];
 }

@@ -1,22 +1,21 @@
-import * as stream from 'stream';
-import Frame from './frame';
-import Debug from "debug";
+import * as stream from 'node:stream';
 
-const debug = Debug('zigbee-herdsman:adapter:zStack:unpi:writer');
+import {logger} from '../../../utils/logger';
+import {Frame} from './frame';
 
-class Writer extends stream.Readable {
+const NS = 'zh:zstack:unpi:writer';
+
+export class Writer extends stream.Readable {
     public writeFrame(frame: Frame): void {
         const buffer = frame.toBuffer();
-        debug(`--> frame [${[...buffer]}]`);
+        logger.debug(`--> frame [${[...buffer]}]`, NS);
         this.push(buffer);
     }
 
     public writeBuffer(buffer: Buffer): void {
-        debug(`--> buffer [${[...buffer]}]`);
+        logger.debug(`--> buffer [${[...buffer]}]`, NS);
         this.push(buffer);
     }
 
-    public _read(): void {}
+    public override _read(): void {}
 }
-
-export default Writer;

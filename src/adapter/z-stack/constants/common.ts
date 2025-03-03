@@ -1,10 +1,9 @@
-
 export enum AddressMode {
     ADDR_NOT_PRESENT = 0,
     ADDR_GROUP = 1,
     ADDR_16BIT = 2,
     ADDR_64BIT = 3,
-    ADDR_BROADCAST = 15
+    ADDR_BROADCAST = 15,
 }
 
 export enum DevStates {
@@ -32,7 +31,7 @@ export enum DevStates {
     NOT_PERMITTED = 139,
     TABLE_FULL = 140,
     NOT_AUTHORIZED = 141,
-    BINDING_TABLE_FULL = 142
+    BINDING_TABLE_FULL = 142,
 }
 
 export enum NvItemsIds {
@@ -141,8 +140,10 @@ export enum NvItemsIds {
     SAS_CURR_NWK_KEY = 210,
     SAS_CURR_PRECFG_LINK_KEY = 211,
     TCLK_SEED = 257,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     LEGACY_TCLK_TABLE_START_12 = 257, // Keep it for Legacy 1.2 stack
     LEGACY_TCLK_TABLE_START = 273, // Valid for <= Z-Stack 3.0.x
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     EX_TCLK_TABLE = 4, // Valid for >= Z-Stack 3.0.x
     APS_LINK_KEY_DATA_START = 513,
     APS_LINK_KEY_DATA_END = 767,
@@ -152,7 +153,8 @@ export enum NvItemsIds {
     ZNP_HAS_CONFIGURED_ZSTACK1 = 3840,
     ZNP_HAS_CONFIGURED_ZSTACK3 = 96,
     ZCD_NV_EX_APS_KEY_DATA_TABLE = 6,
-    ZCD_NV_EX_ADDRMGR = 1
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+    ZCD_NV_EX_ADDRMGR = 1,
 }
 
 export enum NvSystemIds {
@@ -241,7 +243,7 @@ export enum ZnpCommandStatus {
     MAC_PAST_TIME = 0xf7,
     MAC_TRACKING_OFF = 0xf8,
     MAC_SCAN_IN_PROGRESS = 0xfc,
-    MAC_SRC_MATCH_INVALID_INDEX = 0xff
+    MAC_SRC_MATCH_INVALID_INDEX = 0xff,
 }
 
 export enum CapabInfoMask {
@@ -250,7 +252,7 @@ export enum CapabInfoMask {
     POWER_AC = 4,
     RCVR_ON_IDLE = 8,
     SECURITY_CAPABLE = 64,
-    ALLOC_ADDR = 128
+    ALLOC_ADDR = 128,
 }
 
 export enum SecurityLevel {
@@ -261,7 +263,7 @@ export enum SecurityLevel {
     ENC = 4,
     ENC_MIC_32 = 5,
     ENC_MIC_64 = 6,
-    ENC_MIC_128 = 7
+    ENC_MIC_128 = 7,
 }
 
 export enum ScanDuration {
@@ -282,5 +284,5 @@ export enum ScanDuration {
     T_120_MSEC = 3,
     T_60_MSEC = 2,
     T_30_MSEC = 1,
-    T_15_MSEC = 0
+    T_15_MSEC = 0,
 }

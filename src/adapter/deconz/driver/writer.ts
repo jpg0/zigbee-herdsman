@@ -1,21 +1,22 @@
-/* istanbul ignore file */
-/* eslint-disable */
-import * as stream from 'stream';
-import Frame from './frame';
-// @ts-ignore
-import slip from 'slip';
-import Debug from "debug";
+/* v8 ignore start */
 
-const debug = Debug('zigbee-herdsman:deconz:driver:writer');
+import * as stream from 'node:stream';
+
+import slip from 'slip';
+
+import {logger} from '../../../utils/logger';
+import Frame from './frame';
+
+const NS = 'zh:deconz:driver:writer';
 
 class Writer extends stream.Readable {
     public writeFrame(frame: Frame): void {
         const buffer = slip.encode(frame.toBuffer());
-        debug(`--> frame [${[...buffer]}]`);
+        logger.debug(`--> frame [${[...buffer]}]`, NS);
         this.push(buffer);
     }
 
-    public _read(): void {}
+    public override _read(): void {}
 }
 
 export default Writer;
